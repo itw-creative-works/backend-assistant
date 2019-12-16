@@ -1,0 +1,28 @@
+{
+  "name": "backend-assistant",
+  "version": "0.0.0",
+  "description": "Powerful assistive functions for Firebase backends",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itw-creative-works/backend-assistant.git"
+  },
+  "keywords": [
+    "Backend",
+    "management",
+    "backend",
+    "assistant"
+  ],
+  "author": "ITW Creative Works",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/itw-creative-works/backend-assistant/issues"
+  },
+  "homepage": "https://github.com/itw-creative-works/backend-assistant#readme",
+  "dependencies": {
+    "lodash": "^4.17.15"
+  }
+}
