@@ -25,30 +25,33 @@ BackendAssistant.prototype.init = function (options) {
   this.meta.startTime.timestamp = new Date().toISOString();
   this.meta.startTime.timestampUNIX = Math.floor((+new Date(this.meta.startTime.timestamp)) / 1000);
 
-  this.meta.name = options.name || 'unnamed';
-  this.meta.environment = options.environment || (process.env.TERM_PROGRAM == 'Apple_Terminal' ? "development" : "production")
+  this.meta.name = options.name || process.env.FUNCTION_TARGET || 'unnamed';
+  this.meta.environment = options.environment || (process.env.TERM_PROGRAM == 'Apple_Terminal' ? "development" : "production");
+  this.meta.type = process.env.FUNCTION_SIGNATURE_TYPE;
 
-  this.refs = {};
-  options.refs = options.refs || {};
-  this.refs.res = options.refs.res || {};
-  this.refs.req = options.refs.req || {};
-  this.refs.admin = options.refs.admin || {};
+  this.ref = {};
+  options.ref = options.ref || {};
+  this.ref.res = options.ref.res || {};
+  this.ref.req = options.ref.req || {};
+  this.ref.admin = options.ref.admin || {};
+  this.ref.functions = options.ref.functions || {};
 
   // Set stuff about request
   this.request = {};
-  this.request.referrer = (this.refs.req.headers || {}).referrer || (this.refs.req.headers || {}).referer || '';
-  this.request.method = (this.refs.req.method || 'undefined');
-  this.request.ip = getHeaderIp(this.refs.req.headers);
-  this.request.country = getHeaderCountry(this.refs.req.headers);
-  this.request.type = (this.refs.req.xhr || _.get(this.refs.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.refs.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
-  this.request.path = (this.refs.req.path || '');
+  this.request.referrer = (this.ref.req.headers || {}).referrer || (this.ref.req.headers || {}).referer || '';
+  this.request.method = (this.ref.req.method || 'undefined');
+  this.request.ip = getHeaderIp(this.ref.req.headers);
+  this.request.country = getHeaderCountry(this.ref.req.headers);
+  this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
+  this.request.path = (this.ref.req.path || '');
+  this.request.isAdmin = undefined;
 
   if (options.accept == 'json') {
-    this.request.body = tryParse(this.refs.req.body || '{}');
-    this.request.query = tryParse(this.refs.req.query || '{}');
+    this.request.body = tryParse(this.ref.req.body || '{}');
+    this.request.query = tryParse(this.ref.req.query || '{}');
   }
 
-  this.request.headers = (this.refs.req.headers || {});
+  this.request.headers = (this.ref.req.headers || {});
   this.request.data = Object.assign({}, this.request.body || {}, this.request.query || {});
 
   // Constants
@@ -59,13 +62,14 @@ BackendAssistant.prototype.init = function (options) {
 
   if ((this.meta.environment == 'development') && (this.request.method != 'OPTIONS' || (this.request.method == 'OPTIONS' && options.showOptionsLog))) {
     console.log(''); console.log(''); console.log(''); console.log(''); console.log('');
-    console.log(`---${this.meta.name}--- ${this.request.method}`);
-    // this.log('this.refs.req.headers',this.refs.req.headers)
-    // console.log('this.refs.req.body', typeof this.refs.req.body, this.refs.req.body.slap_email, JSON.stringify(this.refs.req.body), );
-    // console.log('this.refs.req.query', typeof this.refs.req.query, this.refs.req.query.slap_email, JSON.stringify(this.refs.req.query), );
+    // console.log(`---${this.meta.name}--- ${this.request.method}`);
+    // this.log('this.ref.req.headers',this.ref.req.headers)
+    // console.log('this.ref.req.body', typeof this.ref.req.body, this.ref.req.body.slap_email, JSON.stringify(this.ref.req.body), );
+    // console.log('this.ref.req.query', typeof this.ref.req.query, this.ref.req.query.slap_email, JSON.stringify(this.ref.req.query), );
     // console.log('this.request.type',this.request.type);
     // console.log('this.request.method',this.request.method);
   }
+  return this;
 
 };
 
@@ -137,6 +141,72 @@ BackendAssistant.prototype._log = function() {
     console.log.apply(console, args);
   }
 }
+
+BackendAssistant.prototype.authorizeAdmin = async function () {
+  let This = this;
+  let admin = this.ref.admin;
+  let functions = this.ref.functions;
+  let req = this.ref.req;
+  let res = this.ref.res;
+  let data = this.request.data;
+
+  if ((!req.headers.authorization || !req.headers.authorization.startsWith('Bearer '))
+    && !(req.cookies && req.cookies.__session)
+    && !(data.backendManagerKey)
+  ) {
+    console.error('No Firebase ID token was passed as a Bearer token in the Authorization header.',
+      'Make sure you authorize your request by providing the following HTTP header:',
+      'Authorization: Bearer <Firebase ID Token>',
+      'or by passing a "__session" cookie.');
+    this.request.isAdmin = false;
+    return false;
+  }
+
+  let idToken;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    This.log('Found "Authorization" header');
+    // Read the ID Token from the Authorization header.
+    idToken = req.headers.authorization.split('Bearer ')[1];
+  } else if(req.cookies) {
+    This.log('Found "__session" cookie');
+    // Read the ID Token from cookie.
+    idToken = req.cookies.__session;
+  } else if (data.backendManagerKey) {
+    idToken = data.backendManagerKey;
+  } else {
+    // No cookie
+    this.request.isAdmin = false;
+    return false;
+  }
+
+  // Check with custom BEM Token
+  let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
+  if (storedApiKey == idToken) {
+    this.request.isAdmin = true;
+    return true;
+  }
+
+  // Check with firebase
+  try {
+    const decodedIdToken = await admin.auth().verifyIdToken(idToken);
+    This.log('Token correctly decoded', decodedIdToken.email, decodedIdToken.user_id);
+    let status = false;
+    await admin.firestore().doc(`users/${decodedIdToken.user_id}`)
+    .get()
+    .then(async function (doc) {
+      if (doc.exists) {
+        status = _.get(doc.data(), 'roles.admin', false)
+      }
+      This.log('Found user doc with roles.admin =', status)
+    })
+    this.request.isAdmin = status;
+    return status;
+  } catch (error) {
+    This.log('Error while verifying Firebase ID token:', error);
+    this.request.isAdmin = false;
+    return false;
+  }
+};
 
 function stringify(obj, replacer, spaces, cycleReplacer) {
   return JSON.stringify(obj, serializer(replacer, cycleReplacer), spaces)
