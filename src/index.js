@@ -208,6 +208,23 @@ BackendAssistant.prototype.authorizeAdmin = async function () {
   }
 };
 
+BackendAssistant.prototype.parseRepo = function (repo) {
+  let repoSplit = repo.split('/');
+  for (var i = 0; i < repoSplit.length; i++) {
+    repoSplit[i] = repoSplit[i].replace('.git', '');
+  }
+  repoSplit = repoSplit.filter(function(value, index, arr){
+      return value != 'http:' &&
+             value != 'https:' &&
+             value != '' &&
+             value != 'github.com';
+  });
+  return {
+    user: repoSplit[0],
+    name: repoSplit[1],
+  }
+};
+
 function stringify(obj, replacer, spaces, cycleReplacer) {
   return JSON.stringify(obj, serializer(replacer, cycleReplacer), spaces)
 }
