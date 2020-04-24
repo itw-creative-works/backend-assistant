@@ -14,7 +14,7 @@ function tryParse(input) {
   return ret;
 }
 
-BackendAssistant.prototype.init = function (options) {
+BackendAssistant.prototype.init = function (ref, options) {
   options = options || {};
   options.accept = options.accept || 'json';
   options.showOptionsLog = typeof options.showOptionsLog !== 'undefined' ? options.showOptionsLog : false;
@@ -30,11 +30,11 @@ BackendAssistant.prototype.init = function (options) {
   this.meta.type = process.env.FUNCTION_SIGNATURE_TYPE;
 
   this.ref = {};
-  options.ref = options.ref || {};
-  this.ref.res = options.ref.res || {};
-  this.ref.req = options.ref.req || {};
-  this.ref.admin = options.ref.admin || {};
-  this.ref.functions = options.ref.functions || {};
+  ref = ref || {};
+  this.ref.res = ref.res || {};
+  this.ref.req = ref.req || {};
+  this.ref.admin = ref.admin || {};
+  this.ref.functions = ref.functions || {};
 
   // Set stuff about request
   this.request = {};
@@ -44,7 +44,7 @@ BackendAssistant.prototype.init = function (options) {
   this.request.country = getHeaderCountry(this.ref.req.headers);
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
-  this.request.isAdmin = undefined;
+  this.request.user = require('./user.json');
 
   if (options.accept == 'json') {
     this.request.body = tryParse(this.ref.req.body || '{}');
@@ -74,25 +74,25 @@ BackendAssistant.prototype.init = function (options) {
 };
 
 BackendAssistant.prototype.logProd = function () {
-  let This = this;
-  // log.apply(This, args);
-  This._log.apply(this, args);
+  let self = this;
+  // log.apply(self, args);
+  self._log.apply(this, args);
 };
 
 BackendAssistant.prototype.log = function () {
-  let This = this;
+  let self = this;
   let args = Array.prototype.slice.call(arguments);
   let last = args[args.length - 1];
   let runEnv = 'development';
   if (typeof last === 'object' && !Array.isArray(last)) {
     runEnv = typeof last.environment !== 'undefined' ? last.environment : 'development';
   }
-  if (This.meta.environment == 'development' || runEnv == 'production') {
+  if (self.meta.environment == 'development' || runEnv == 'production') {
     // 1. Convert args to a normal array
     let args = Array.prototype.slice.call(arguments);
 
-    // log.apply(This, args);
-    This._log.apply(this, args);
+    // log.apply(self, args);
+    self._log.apply(this, args);
   }
 };
 
@@ -105,14 +105,14 @@ BackendAssistant.prototype.wait = function (ms) {
 };
 
 BackendAssistant.prototype._log = function() {
-  let This = this;
+  let self = this;
   // console.log('LOG INNER ENV', stringify(this));
   // console.log('LOG INNER ENV', this.meta.name);
   // // 1. Convert args to a normal array
   let args = Array.prototype.slice.call(arguments);
 
   // convert objects to strings if in development
-  if (This.meta.environment == 'development') {
+  if (self.meta.environment == 'development') {
     for (var i = 0; i < args.length; i++) {
       if (typeof args[i] === 'object') {
         try {
@@ -125,7 +125,7 @@ BackendAssistant.prototype._log = function() {
   };
 
   // 2. Prepend log prefix log string
-  args.unshift(`[${This.meta.name} ${This.meta.startTime.timestamp}] >`);
+  args.unshift(`[${self.meta.name} ${self.meta.startTime.timestamp}] >`);
 
   // 3. Pass along arguments to console.log
   if (args[1] == 'error') {
@@ -142,71 +142,140 @@ BackendAssistant.prototype._log = function() {
   }
 }
 
-BackendAssistant.prototype.authorizeAdmin = async function () {
-  let This = this;
-  let admin = this.ref.admin;
-  let functions = this.ref.functions;
-  let req = this.ref.req;
-  let res = this.ref.res;
-  let data = this.request.data;
+BackendAssistant.prototype.authorize = async function () {
+  let self = this;
+  let admin = self.ref.admin;
+  let functions = self.ref.functions;
+  let req = self.ref.req;
+  let res = self.ref.res;
+  let data = self.request.data;
+  let idToken;
 
   if ((!req.headers.authorization || !req.headers.authorization.startsWith('Bearer '))
     && !(req.cookies && req.cookies.__session)
     && !(data.backendManagerKey)
+    && !(data.authenticationToken)
   ) {
-    console.error('No Firebase ID token was passed as a Bearer token in the Authorization header.',
+    self.log('No Firebase ID token was passed as a Bearer token in the Authorization header.',
       'Make sure you authorize your request by providing the following HTTP header:',
       'Authorization: Bearer <Firebase ID Token>',
       'or by passing a "__session" cookie.');
-    this.request.isAdmin = false;
-    return false;
+
+    return self.request.user;
   }
 
-  let idToken;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-    This.log('Found "Authorization" header');
+    self.log('Found "Authorization" header');
     // Read the ID Token from the Authorization header.
     idToken = req.headers.authorization.split('Bearer ')[1];
   } else if(req.cookies) {
-    This.log('Found "__session" cookie');
+    self.log('Found "__session" cookie');
     // Read the ID Token from cookie.
     idToken = req.cookies.__session;
   } else if (data.backendManagerKey) {
     idToken = data.backendManagerKey;
+  } else if (data.authenticationToken) {
+    idToken = data.authenticationToken;
   } else {
     // No cookie
-    this.request.isAdmin = false;
-    return false;
+    return self.request.user;
   }
 
   // Check with custom BEM Token
   let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
-  if (storedApiKey == idToken) {
-    this.request.isAdmin = true;
-    return true;
+  if (storedApiKey === idToken) {
+    self.request.user.authorized = true;
+    self.request.user.roles.admin = true;
+    return self.request.user;
   }
 
   // Check with firebase
   try {
     const decodedIdToken = await admin.auth().verifyIdToken(idToken);
-    This.log('Token correctly decoded', decodedIdToken.email, decodedIdToken.user_id);
-    let status = false;
+    self.log('Token correctly decoded', decodedIdToken.email, decodedIdToken.user_id);
     await admin.firestore().doc(`users/${decodedIdToken.user_id}`)
     .get()
     .then(async function (doc) {
       if (doc.exists) {
-        status = _.get(doc.data(), 'roles.admin', false)
+        self.request.user = doc.data();
       }
-      This.log('Found user doc with roles.admin =', status)
+      self.request.user.authorized = true;
+      self.request.user.firebase.uid = decodedIdToken.user_id;
+      self.request.user.firebase.email = decodedIdToken.email;
+      self.log('Found user doc', self.request.user)
     })
-    this.request.isAdmin = status;
-    return status;
+    return self.request.user;
   } catch (error) {
-    This.log('Error while verifying Firebase ID token:', error);
-    this.request.isAdmin = false;
-    return false;
+    self.log('Error while verifying Firebase ID token:', error);
+    return self.request.user;
   }
 };
+
+// BackendAssistant.prototype.authorizeAdmin = async function () {
+//   let self = this;
+//   let admin = this.ref.admin;
+//   let functions = this.ref.functions;
+//   let req = this.ref.req;
+//   let res = this.ref.res;
+//   let data = this.request.data;
+//
+//   if ((!req.headers.authorization || !req.headers.authorization.startsWith('Bearer '))
+//     && !(req.cookies && req.cookies.__session)
+//     && !(data.backendManagerKey)
+//   ) {
+//     console.error('No Firebase ID token was passed as a Bearer token in the Authorization header.',
+//       'Make sure you authorize your request by providing the following HTTP header:',
+//       'Authorization: Bearer <Firebase ID Token>',
+//       'or by passing a "__session" cookie.');
+//     this.request.isAdmin = false;
+//     return false;
+//   }
+//
+//   let idToken;
+//   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+//     self.log('Found "Authorization" header');
+//     // Read the ID Token from the Authorization header.
+//     idToken = req.headers.authorization.split('Bearer ')[1];
+//   } else if(req.cookies) {
+//     self.log('Found "__session" cookie');
+//     // Read the ID Token from cookie.
+//     idToken = req.cookies.__session;
+//   } else if (data.backendManagerKey) {
+//     idToken = data.backendManagerKey;
+//   } else {
+//     // No cookie
+//     this.request.isAdmin = false;
+//     return false;
+//   }
+//
+//   // Check with custom BEM Token
+//   let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
+//   if (storedApiKey == idToken) {
+//     this.request.isAdmin = true;
+//     return true;
+//   }
+//
+//   // Check with firebase
+//   try {
+//     const decodedIdToken = await admin.auth().verifyIdToken(idToken);
+//     self.log('Token correctly decoded', decodedIdToken.email, decodedIdToken.user_id);
+//     let status = false;
+//     await admin.firestore().doc(`users/${decodedIdToken.user_id}`)
+//     .get()
+//     .then(async function (doc) {
+//       if (doc.exists) {
+//         status = _.get(doc.data(), 'roles.admin', false)
+//       }
+//       self.log('Found user doc with roles.admin =', status)
+//     })
+//     this.request.isAdmin = status;
+//     return status;
+//   } catch (error) {
+//     self.log('Error while verifying Firebase ID token:', error);
+//     this.request.isAdmin = false;
+//     return false;
+//   }
+// };
 
 BackendAssistant.prototype.parseRepo = function (repo) {
   let repoSplit = repo.split('/');

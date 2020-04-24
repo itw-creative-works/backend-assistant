@@ -1,6 +1,6 @@
 {
   "name": "backend-assistant",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Powerful assistive functions for Firebase backends",
   "main": "src/index.js",
   "scripts": {
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/itw-creative-works/backend-assistant#readme",
   "dependencies": {
+    "json5": "^2.1.3",
     "lodash": "^4.17.15"
   }
 }

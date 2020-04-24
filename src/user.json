@@ -1,0 +1,13 @@
+{
+  "authorized": false,
+  
+  "firebase": {
+    "uid": "",
+    "email": ""
+  },
+  "roles": {
+    "admin": false,
+    "developer": false,
+    "betaTester": false
+  }
+}
