@@ -89,7 +89,8 @@ BackendAssistant.prototype.log = function () {
   }
   if (self.meta.environment == 'development' || runEnv == 'production') {
     // 1. Convert args to a normal array
-    let args = Array.prototype.slice.call(arguments);
+    // let args = Array.prototype.slice.call(arguments);
+    args.pop();
 
     // log.apply(self, args);
     self._log.apply(this, args);
