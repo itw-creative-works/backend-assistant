@@ -27,7 +27,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.meta.startTime.timestampUNIX = Math.floor((+new Date(this.meta.startTime.timestamp)) / 1000);
 
   this.meta.name = options.name || process.env.FUNCTION_TARGET || 'unnamed';
-  this.meta.environment = options.environment || (process.env.TERM_PROGRAM == 'Apple_Terminal' ? "development" : "production");
+  this.meta.environment = options.environment || this.getEnvironment();
   this.meta.type = process.env.FUNCTION_SIGNATURE_TYPE;
 
   this.ref = {};
@@ -41,8 +41,8 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request = {};
   this.request.referrer = (this.ref.req.headers || {}).referrer || (this.ref.req.headers || {}).referer || '';
   this.request.method = (this.ref.req.method || 'undefined');
-  this.request.ip = getHeaderIp(this.ref.req.headers);
-  this.request.country = getHeaderCountry(this.ref.req.headers);
+  this.request.ip = this.getHeaderIp(this.ref.req.headers);
+  this.request.country = this.getHeaderCountry(this.ref.req.headers);
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
   this.request.user = require('./user.json');
@@ -72,6 +72,10 @@ BackendAssistant.prototype.init = function (ref, options) {
   }
   return this;
 
+};
+
+BackendAssistant.prototype.getEnvironment = function () {
+  return (process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true' ? 'development' : 'production')
 };
 
 BackendAssistant.prototype.logProd = function () {
@@ -227,6 +231,24 @@ BackendAssistant.prototype.parseRepo = function (repo) {
   }
 };
 
+BackendAssistant.prototype.getHeaderCountry = function (headers) {
+  headers = headers || {};
+  return (
+    headers['cf-ipcountry'] ||
+    'unknown'
+  )
+}
+
+BackendAssistant.prototype.getHeaderIp = function (headers) {
+  headers = headers || {};
+  return (
+    headers['cf-connecting-ip'] ||
+    headers['x-appengine-user-ip'] ||
+    (headers['x-forwarded-for'] || '').split(',').pop() ||
+    '127.0.0.1'
+  )
+}
+
 function stringify(obj, replacer, spaces, cycleReplacer) {
   return JSON.stringify(obj, serializer(replacer, cycleReplacer), spaces)
 }
@@ -251,35 +273,6 @@ function serializer(replacer, cycleReplacer) {
 
     return replacer == null ? value : replacer.call(this, key, value)
   }
-}
-
-function getHeaderCountry(headers) {
-  let ret = '';
-  try {
-    ret =
-      headers['cf-ipcountry'] ||
-      'unknown';
-  } catch (e) {
-    ret = 'unknown';
-    console.error(e);
-  }
-  return ret;
-}
-
-
-function getHeaderIp(headers) {
-  let ret = '';
-  try {
-    ret =
-      headers['cf-connecting-ip'] ||
-      headers['x-appengine-user-ip'] ||
-      (headers['x-forwarded-for'] || '').split(',').pop() ||
-      '127.0.0.1';
-  } catch (e) {
-    ret = '127.0.0.1';
-    console.error(e);
-  }
-  return ret;
 }
 
 function tryLogPrep(obj, environment) {
