@@ -117,7 +117,11 @@ BackendAssistant.prototype._log = function() {
 
   // convert objects to strings if in development
   for (var i = 0, l = args.length; i < l; i++) {
-    logs = logs.concat(typeof args[i] === 'object' && !(args[i] instanceof Error)
+    if (args[i] instanceof Error) {
+      console.error(args[i]);
+      continue;
+    }
+    logs = logs.concat(typeof args[i] === 'object'
       ? tryLogPrep(args[i], self.meta.environment)
       : args[i]);
   }
