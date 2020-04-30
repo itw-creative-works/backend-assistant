@@ -15,10 +15,6 @@ function tryParse(input) {
   return ret;
 }
 
-BackendAssistant.prototype.getPackage = function () {
-  return require('../package.json');
-}
-
 BackendAssistant.prototype.init = function (ref, options) {
   options = options || {};
   options.accept = options.accept || 'json';
