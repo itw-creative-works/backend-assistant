@@ -6,9 +6,10 @@ function BackendAssistant() {
 }
 
 function tryParse(input) {
+  JSON5 = JSON5 || require('json5');
   var ret;
   try {
-    ret = JSON.parse(input);
+    ret = JSON5.parse(input);
   } catch (e) {
     ret = input
   }
@@ -53,7 +54,11 @@ BackendAssistant.prototype.init = function (ref, options) {
   }
 
   this.request.headers = (this.ref.req.headers || {});
-  this.request.data = Object.assign({}, this.request.body || {}, this.request.query || {});
+  this.request.data = Object.assign(
+    {},
+    _.cloneDeep(this.request.body || {}),
+    _.cloneDeep(this.request.query || {})
+  );
 
   // Constants
   this.constant = {};
