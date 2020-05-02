@@ -101,12 +101,11 @@ BackendAssistant.prototype.log = function () {
   let self = this;
   let args = Array.prototype.slice.call(arguments);
   let last = args[args.length - 1];
-  let runEnv = 'development';
-  if (typeof last === 'object' && !Array.isArray(last)) {
-    runEnv = typeof last.environment !== 'undefined' ? last.environment : 'development';
-    args.pop();
-  }
-  if (self.meta.environment == 'development' || runEnv == 'production') {
+  let override = (last && last.environment === 'production');
+  if (self.meta.environment === 'development' || override) {
+    if (override) {
+      args.pop();
+    }
     self._log.apply(this, args);
   }
 };
