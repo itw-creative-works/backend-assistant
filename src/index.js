@@ -104,11 +104,9 @@ BackendAssistant.prototype.log = function () {
   let runEnv = 'development';
   if (typeof last === 'object' && !Array.isArray(last)) {
     runEnv = typeof last.environment !== 'undefined' ? last.environment : 'development';
+    args.pop();
   }
   if (self.meta.environment == 'development' || runEnv == 'production') {
-    // 1. Convert args to a normal array
-    args.pop();
-
     self._log.apply(this, args);
   }
 };
