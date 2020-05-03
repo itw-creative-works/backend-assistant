@@ -39,19 +39,28 @@ npm install backend-assistant
 After installing via npm, simply paste this script in your `functions/index.js` file.
 ```js
 // In your functions/index.js file
-let BackendAssistant = require('backend-assistant');
-let assistant = new BackendAssistant();
-assistant.init({
-  name: 'submissionProcess',
-  // environment: 'production',
-  ref: {
-    req: req,
-    res: res,
+const admin = require('firebase-admin');
+const functions = require('firebase-functions');
+const Assistant = require('backend-assistant');
+let assistant = new Assistant().init({
     admin: admin,
+    functions: functions,
+    // req: req, // optional
+    // res: res, // optional
   },
-  accept: 'json',
-  showOptionsLog: false,
-})
+  {
+    accept: 'json',
+  })
+```
+## Usage
+Now you can harness powerful features
+```js
+// assistant.log: correctly logs objects in Firebase functions
+assistant.log({
+  parent: {
+    child: 'value'
+  }
+}, {environment: 'production'})
 ```
 
 ## Final Words
