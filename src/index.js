@@ -147,7 +147,7 @@ BackendAssistant.prototype._log = function() {
 
 }
 
-BackendAssistant.prototype.authorize = async function () {
+BackendAssistant.prototype.authorize = async function (options) {
   let self = this;
   let admin = self.ref.admin;
   let functions = self.ref.functions;
@@ -155,42 +155,48 @@ BackendAssistant.prototype.authorize = async function () {
   let res = self.ref.res;
   let data = self.request.data;
   let idToken;
-
-  if ((!req.headers.authorization || !req.headers.authorization.startsWith('Bearer '))
-    && !(req.cookies && req.cookies.__session)
-    && !(data.backendManagerKey)
-    && !(data.authenticationToken)
-  ) {
-    self.log('No Firebase ID token was passed as a Bearer token in the Authorization header.',
-      'Make sure you authorize your request by providing the following HTTP header:',
-      'Authorization: Bearer <Firebase ID Token>',
-      'or by passing a "__session" cookie.');
-
-    return self.request.user;
-  }
+  options = options || {};
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     self.log('Found "Authorization" header');
     // Read the ID Token from the Authorization header.
     idToken = req.headers.authorization.split('Bearer ')[1];
-  } else if(req.cookies) {
+  } else if (req.cookies && req.cookies.__session) {
     self.log('Found "__session" cookie');
     // Read the ID Token from cookie.
     idToken = req.cookies.__session;
-  } else if (data.backendManagerKey) {
-    idToken = data.backendManagerKey;
-  } else if (data.authenticationToken) {
-    idToken = data.authenticationToken;
-  } else {
-    // No cookie
+  } else if (data.backendManagerKey || data.authenticationToken) {
+    // Check with custom BEM Token
+    let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
+    if (storedApiKey === data.backendManagerKey || storedApiKey === data.authenticationToken) {
+      self.request.user.authorized = true;
+      self.request.user.roles.admin = true;
+      return self.request.user;
+    }
+    idToken = data.backendManagerKey || data.authenticationToken;
+  } else if (options.apiKey) {
+    if (options.apiKey.includes('test')) {
+      return self.request.user;
+    }
+    await admin.firestore().collection(`users`)
+    .where("api.privateKey", "==", options.apiKey)
+    .get()
+    .then(function(querySnapshot) {
+      querySnapshot.forEach(function(doc) {
+        // doc.data() is never undefined for query doc snapshots
+        self.request.user = doc.data();
+        self.request.user.authorized = true;
+      });
+    })
+    .catch(function(error) {
+      console.log("Error getting documents: ", error);
+    });
     return self.request.user;
-  }
-
-  // Check with custom BEM Token
-  let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
-  if (storedApiKey === idToken) {
-    self.request.user.authorized = true;
-    self.request.user.roles.admin = true;
+  } else {
+    self.log('No Firebase ID token was passed as a Bearer token in the Authorization header.',
+      'Make sure you authorize your request by providing the following HTTP header:',
+      'Authorization: Bearer <Firebase ID Token>',
+      'or by passing a "__session" cookie.');
     return self.request.user;
   }
 
