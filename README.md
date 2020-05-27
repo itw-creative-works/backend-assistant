@@ -1,29 +1,29 @@
-<div align="center">
+<p align="center">
   <a href="https://cdn.itwcreativeworks.com/assets/itw-creative-works/images/logo/itw-creative-works-brandmark-black-x.svg">
     <img src="https://cdn.itwcreativeworks.com/assets/itw-creative-works/images/logo/itw-creative-works-brandmark-black-x.svg">
   </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/package-json/v/itw-creative-works/backend-assistant.svg">
+  <br>
+  <img src="https://img.shields.io/david/itw-creative-works/backend-assistant.svg">
+  <img src="https://img.shields.io/david/dev/itw-creative-works/backend-assistant.svg">
+  <img src="https://img.shields.io/bundlephobia/min/backend-assistant.svg">
+  <img src="https://img.shields.io/codeclimate/maintainability-percentage/itw-creative-works/backend-assistant.svg">
+  <img src="https://img.shields.io/npm/dm/backend-assistant.svg">
+  <img src="https://img.shields.io/node/v/backend-assistant.svg">
+  <img src="https://img.shields.io/website/https/itwcreativeworks.com.svg">
+  <img src="https://img.shields.io/github/license/itw-creative-works/backend-assistant.svg">
+  <img src="https://img.shields.io/github/contributors/itw-creative-works/backend-assistant.svg">
+  <img src="https://img.shields.io/github/last-commit/itw-creative-works/backend-assistant.svg">
   <br>
   <br>
-
-![GitHub package.json version](https://img.shields.io/github/package-json/v/itw-creative-works/backend-assistant.svg)
-
-![David](https://img.shields.io/david/itw-creative-works/backend-assistant.svg)
-![David](https://img.shields.io/david/dev/itw-creative-works/backend-assistant.svg) <!-- ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/itw-creative-works/backend-assistant.svg) -->
-![npm bundle size](https://img.shields.io/bundlephobia/min/backend-assistant.svg)
-![Code Climate maintainability](https://img.shields.io/codeclimate/maintainability-percentage/itw-creative-works/backend-assistant.svg)
-![npm](https://img.shields.io/npm/dm/backend-assistant.svg) <!-- [![NPM total downloads](https://img.shields.io/npm/dt/backend-assistant.svg?style=flat)](https://npmjs.org/package/backend-assistant) -->
-![node](https://img.shields.io/node/v/backend-assistant.svg)
-![Website](https://img.shields.io/website/https/itwcreativeworks.com.svg)
-![GitHub](https://img.shields.io/github/license/itw-creative-works/backend-assistant.svg)
-![GitHub contributors](https://img.shields.io/github/contributors/itw-creative-works/backend-assistant.svg)
-![GitHub last commit](https://img.shields.io/github/last-commit/itw-creative-works/backend-assistant.svg)
-
-# Backend Assistant
-**Backend Assistant** is an NPM module for Firebase developers that instantly powerful assistive functions for Firebase backends.
-
-[Site](https://itwcreativeworks.com) | [NPM Module](https://www.npmjs.com/package/backend-assistant) | [GitHub Repo](https://github.com/itw-creative-works/backend-assistant)
-
-</div>
+  <a href="https://itwcreativeworks.com">Site</a> | <a href="https://www.npmjs.com/package/backend-assistant">NPM Module</a> | <a href="https://github.com/itw-creative-works/backend-assistant">GitHub Repo</a>
+  <br>
+  <br>
+  <strong>Backend Assistant</strong> is an NPM module for Firebase developers that instantly powerful assistive functions for Firebase backends.
+</p>
 
 ## Install
 Install with npm:
