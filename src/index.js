@@ -203,7 +203,9 @@ BackendAssistant.prototype.authorize = async function (options) {
   // Check with firebase
   try {
     const decodedIdToken = await admin.auth().verifyIdToken(idToken);
-    self.log('Token correctly decoded', decodedIdToken.email, decodedIdToken.user_id);
+    if (options.debug) {
+      self.log('Token correctly decoded', decodedIdToken.email, decodedIdToken.user_id);
+    }
     await admin.firestore().doc(`users/${decodedIdToken.user_id}`)
     .get()
     .then(async function (doc) {
@@ -213,7 +215,9 @@ BackendAssistant.prototype.authorize = async function (options) {
       self.request.user.authorized = true;
       self.request.user.firebase.uid = decodedIdToken.user_id;
       self.request.user.firebase.email = decodedIdToken.email;
-      self.log('Found user doc', self.request.user)
+      if (options.debug) {
+        self.log('Found user doc', self.request.user)
+      }
     })
     return self.request.user;
   } catch (error) {
