@@ -48,7 +48,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request.path = (this.ref.req.path || '');
   this.request.user = require('./user.json');
 
-  if (options.accept == 'json') {
+  if (options.accept === 'json') {
     this.request.body = tryParse(this.ref.req.body || '{}');
     this.request.query = tryParse(this.ref.req.query || '{}');
   }
@@ -66,17 +66,11 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.constant.pastTime.timestamp = '1999-01-01T00:00:00Z';
   this.constant.pastTime.timestampUNIX = 915148800;
 
-  if ((this.meta.environment == 'development') && (this.request.method != 'OPTIONS' || (this.request.method == 'OPTIONS' && options.showOptionsLog))) {
-    console.log(''); console.log(''); console.log(''); console.log(''); console.log('');
-    // console.log(`---${this.meta.name}--- ${this.request.method}`);
-    // this.log('this.ref.req.headers',this.ref.req.headers)
-    // console.log('this.ref.req.body', typeof this.ref.req.body, this.ref.req.body.slap_email, JSON.stringify(this.ref.req.body), );
-    // console.log('this.ref.req.query', typeof this.ref.req.query, this.ref.req.query.slap_email, JSON.stringify(this.ref.req.query), );
-    // console.log('this.request.type',this.request.type);
-    // console.log('this.request.method',this.request.method);
+  if ((this.meta.environment === 'development') && ((this.request.method !== 'OPTIONS') || (this.request.method === 'OPTIONS' && options.showOptionsLog)) && (this.request.method !== 'undefined')) {
+    console.log('\n\n\n\n\n');
   }
-  return this;
 
+  return this;
 };
 
 BackendAssistant.prototype.getEnvironment = function () {
@@ -85,29 +79,27 @@ BackendAssistant.prototype.getEnvironment = function () {
 
 BackendAssistant.prototype.logProd = function () {
   let self = this;
-  // log.apply(self, args);
   self._log.apply(this, args);
 };
-
-// BackendAssistant.prototype.wait = function (ms) {
-//   return new Promise(function(resolve, reject) {
-//     setTimeout(function () {
-//       resolve({waited: ms});
-//     }, ms || 1);
-//   });
-// };
 
 BackendAssistant.prototype.log = function () {
   let self = this;
   let args = Array.prototype.slice.call(arguments);
   let last = args[args.length - 1];
-  let override = (last && last.environment === 'production');
+  let override = (typeof last === 'object' && last.environment === 'production');
   if (self.meta.environment === 'development' || override) {
     if (override) {
       args.pop();
     }
     self._log.apply(this, args);
   }
+};
+
+BackendAssistant.prototype.error = function () {
+  let self = this;
+  let args = Array.prototype.slice.call(arguments);
+  args.unshift('error');
+  self.log.apply(self, args);
 };
 
 BackendAssistant.prototype._log = function() {
@@ -117,8 +109,9 @@ BackendAssistant.prototype._log = function() {
   let args = Array.prototype.slice.call(arguments);
   let logs = [];
 
-  // convert objects to strings if in development
+  // loop through and convert objects to strings if in development
   for (var i = 0, l = args.length; i < l; i++) {
+    // if it's an error, log in now and continue to next item
     if (args[i] instanceof Error) {
       console.error(args[i]);
       continue;
@@ -132,13 +125,13 @@ BackendAssistant.prototype._log = function() {
   logs.unshift(`[${self.meta.name} ${self.meta.startTime.timestamp}] >`);
 
   // 3. Pass along arguments to console.log
-  if (logs[1] == 'error') {
+  if (logs[1] === 'error') {
     logs.splice(1,1)
     console.error.apply(console, logs);
-  } else if (logs[1] == 'warn') {
+  } else if (logs[1] === 'warn') {
     logs.splice(1,1)
     console.warn.apply(console, logs);
-  } else if (logs[1] == 'log') {
+  } else if (logs[1] === 'log') {
     logs.splice(1,1)
     console.log.apply(console, logs);
   } else {
@@ -233,10 +226,10 @@ BackendAssistant.prototype.parseRepo = function (repo) {
     repoSplit[i] = repoSplit[i].replace('.git', '');
   }
   repoSplit = repoSplit.filter(function(value, index, arr){
-      return value != 'http:' &&
-             value != 'https:' &&
-             value != '' &&
-             value != 'github.com';
+      return value !== 'http:' &&
+             value !== 'https:' &&
+             value !== '' &&
+             value !== 'github.com';
   });
   return {
     user: repoSplit[0],
