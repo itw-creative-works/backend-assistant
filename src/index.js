@@ -140,7 +140,7 @@ BackendAssistant.prototype._log = function() {
 
 }
 
-BackendAssistant.prototype.authorize = async function (options) {
+BackendAssistant.prototype.authenticate = async function (options) {
   let self = this;
   let admin = self.ref.admin;
   let functions = self.ref.functions;
@@ -162,7 +162,7 @@ BackendAssistant.prototype.authorize = async function (options) {
     // Check with custom BEM Token
     let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
     if (storedApiKey === data.backendManagerKey || storedApiKey === data.authenticationToken) {
-      self.request.user.authorized = true;
+      self.request.user.authenticated = true;
       self.request.user.roles.admin = true;
       return self.request.user;
     }
@@ -176,9 +176,8 @@ BackendAssistant.prototype.authorize = async function (options) {
     .get()
     .then(function(querySnapshot) {
       querySnapshot.forEach(function(doc) {
-        // doc.data() is never undefined for query doc snapshots
         self.request.user = doc.data();
-        self.request.user.authorized = true;
+        self.request.user.authenticated = true;
       });
     })
     .catch(function(error) {
@@ -187,7 +186,7 @@ BackendAssistant.prototype.authorize = async function (options) {
     return self.request.user;
   } else {
     self.log('No Firebase ID token was passed as a Bearer token in the Authorization header.',
-      'Make sure you authorize your request by providing the following HTTP header:',
+      'Make sure you authenticate your request by providing the following HTTP header:',
       'Authorization: Bearer <Firebase ID Token>',
       'or by passing a "__session" cookie.',
       'or by passing backendManagerKey or authenticationToken in the body or query');
@@ -206,9 +205,9 @@ BackendAssistant.prototype.authorize = async function (options) {
       if (doc.exists) {
         self.request.user = doc.data();
       }
-      self.request.user.authorized = true;
-      self.request.user.firebase.uid = decodedIdToken.user_id;
-      self.request.user.firebase.email = decodedIdToken.email;
+      self.request.user.authenticated = true;
+      self.request.user.auth.uid = decodedIdToken.user_id;
+      self.request.user.auth.email = decodedIdToken.email;
       if (options.debug) {
         self.log('Found user doc', self.request.user)
       }
