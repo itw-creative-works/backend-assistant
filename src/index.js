@@ -161,7 +161,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
   } else if (data.backendManagerKey || data.authenticationToken) {
     // Check with custom BEM Token
     let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
-    if (storedApiKey === data.backendManagerKey || storedApiKey === data.authenticationToken) {
+    if (storedApiKey && (storedApiKey === data.backendManagerKey || storedApiKey === data.authenticationToken)) {
       self.request.user.authenticated = true;
       self.request.user.roles.admin = true;
       return self.request.user;
