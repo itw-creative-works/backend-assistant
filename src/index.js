@@ -47,7 +47,6 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
   this.request.user = require('./user.json');
-
   if (options.accept === 'json') {
     this.request.body = tryParse(this.ref.req.body || '{}');
     this.request.query = tryParse(this.ref.req.query || '{}');
@@ -159,6 +158,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
     // Read the ID Token from cookie.
     idToken = req.cookies.__session;
   } else if (data.backendManagerKey || data.authenticationToken) {
+    self.log('Found "backendManagerKey" or "authenticationToken" parameter');
     // Check with custom BEM Token
     let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
     if (storedApiKey && (storedApiKey === data.backendManagerKey || storedApiKey === data.authenticationToken)) {
@@ -203,7 +203,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
     .get()
     .then(async function (doc) {
       if (doc.exists) {
-        self.request.user = doc.data();
+        self.request.user = Object.assign({}, self.request.user, doc.data());
       }
       self.request.user.authenticated = true;
       self.request.user.auth.uid = decodedIdToken.user_id;
