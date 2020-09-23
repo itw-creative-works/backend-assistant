@@ -41,9 +41,10 @@ BackendAssistant.prototype.init = function (ref, options) {
   // Set stuff about request
   this.request = {};
   this.request.referrer = (this.ref.req.headers || {}).referrer || (this.ref.req.headers || {}).referer || '';
-  this.request.method = (this.ref.req.method || 'undefined');
+  this.request.method = (this.ref.req.method || undefined);
   this.request.ip = this.getHeaderIp(this.ref.req.headers);
   this.request.country = this.getHeaderCountry(this.ref.req.headers);
+  this.request.userAgent = this.getHeaderUserAgent(this.ref.req.headers);
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
   this.request.user = require('./user.json');
@@ -236,11 +237,19 @@ BackendAssistant.prototype.parseRepo = function (repo) {
   }
 };
 
+BackendAssistant.prototype.getHeaderUserAgent = function (headers) {
+  headers = headers || {};
+  return (
+    headers['user-agent'] ||
+    ''
+  )
+}
+
 BackendAssistant.prototype.getHeaderCountry = function (headers) {
   headers = headers || {};
   return (
     headers['cf-ipcountry'] ||
-    'unknown'
+    ''
   )
 }
 
