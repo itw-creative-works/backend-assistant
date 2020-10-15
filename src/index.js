@@ -111,14 +111,17 @@ BackendAssistant.prototype._log = function() {
 
   // loop through and convert objects to strings if in development
   for (var i = 0, l = args.length; i < l; i++) {
+    let tempItem;
     // if it's an error, log in now and continue to next item
     if (args[i] instanceof Error) {
       console.error(args[i]);
       continue;
     }
-    logs = logs.concat(typeof args[i] === 'object'
-      ? tryLogPrep(args[i], self.meta.environment)
-      : args[i]);
+    tempItem = typeof args[i] === 'object'
+      ? tryLogPrep(args[i], meta.environment)
+      : args[i];
+    tempItem = typeof tempItem === 'string' && self.meta.environment !== 'development' ? tempItem.replace(/\r\n|\r|\n/, '') : tempItem;
+    logs = logs.concat(tempItem);
   }
 
   // 2. Prepend log prefix log string
