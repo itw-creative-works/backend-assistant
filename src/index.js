@@ -251,19 +251,31 @@ BackendAssistant.prototype.getHeaderUserAgent = function (headers) {
 BackendAssistant.prototype.getHeaderCountry = function (headers) {
   headers = headers || {};
   return (
-    headers['cf-ipcountry'] ||
+    (headers['x-country-code'] || '').split(',')[0] ||
     ''
-  )
+  ).trim()
+  // return (
+  //   // headers['cf-ipcountry'] ||
+  //   ''
+  // )
 }
 
 BackendAssistant.prototype.getHeaderIp = function (headers) {
   headers = headers || {};
   return (
-    headers['cf-connecting-ip'] ||
-    headers['x-appengine-user-ip'] ||
-    (headers['x-forwarded-for'] || '').split(',').pop() ||
+    (headers['fastly-client-ip'] || '').split(',')[0] ||
+    (headers['x-forwarded-for'] || '').split(',')[0] ||
+    (headers['x-appengine-user-ip'] || '').split(',')[0] ||
+    (headers['cf-connecting-ip'] || '').split(',')[0] ||
+    (headers['fastly-temp-xff'] || '').split(',')[0] ||
     '127.0.0.1'
-  )
+  ).trim()
+  // return (
+  //   headers['cf-connecting-ip'] ||
+  //   headers['x-appengine-user-ip'] ||
+  //   (headers['x-forwarded-for'] || '').split(',').pop() ||
+  //   '127.0.0.1'
+  // )
 }
 
 function stringify(obj, replacer, spaces, cycleReplacer) {
