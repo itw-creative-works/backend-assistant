@@ -118,7 +118,7 @@ BackendAssistant.prototype._log = function() {
       continue;
     }
     tempItem = typeof args[i] === 'object'
-      ? tryLogPrep(args[i], meta.environment)
+      ? tryLogPrep(args[i], self.meta.environment)
       : args[i];
     tempItem = typeof tempItem === 'string' && self.meta.environment !== 'development' ? tempItem.replace(/\r\n|\r|\n/, '') : tempItem;
     logs = logs.concat(tempItem);
