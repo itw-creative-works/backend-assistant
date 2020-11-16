@@ -106,23 +106,7 @@ BackendAssistant.prototype._log = function() {
   let self = this;
 
   // 1. Convert args to a normal array
-  let args = Array.prototype.slice.call(arguments);
-  let logs = [];
-
-  // loop through and convert objects to strings if in development
-  for (var i = 0, l = args.length; i < l; i++) {
-    let tempItem;
-    // if it's an error, log in now and continue to next item
-    if (args[i] instanceof Error) {
-      console.error(args[i]);
-      continue;
-    }
-    tempItem = typeof args[i] === 'object'
-      ? tryLogPrep(args[i], self.meta.environment)
-      : args[i];
-    tempItem = typeof tempItem === 'string' && self.meta.environment !== 'development' ? tempItem.replace(/\r\n|\r|\n/, '') : tempItem;
-    logs = logs.concat(tempItem);
-  }
+  let logs = [...Array.prototype.slice.call(arguments)];
 
   // 2. Prepend log prefix log string
   logs.unshift(`[${self.meta.name} ${self.meta.startTime.timestamp}] >`);
@@ -254,10 +238,6 @@ BackendAssistant.prototype.getHeaderCountry = function (headers) {
     (headers['x-country-code'] || '').split(',')[0] ||
     ''
   ).trim()
-  // return (
-  //   // headers['cf-ipcountry'] ||
-  //   ''
-  // )
 }
 
 BackendAssistant.prototype.getHeaderIp = function (headers) {
@@ -270,12 +250,6 @@ BackendAssistant.prototype.getHeaderIp = function (headers) {
     (headers['fastly-temp-xff'] || '').split(',')[0] ||
     '127.0.0.1'
   ).trim()
-  // return (
-  //   headers['cf-connecting-ip'] ||
-  //   headers['x-appengine-user-ip'] ||
-  //   (headers['x-forwarded-for'] || '').split(',').pop() ||
-  //   '127.0.0.1'
-  // )
 }
 
 function stringify(obj, replacer, spaces, cycleReplacer) {
@@ -301,19 +275,6 @@ function serializer(replacer, cycleReplacer) {
     else stack.push(value)
 
     return replacer == null ? value : replacer.call(this, key, value)
-  }
-}
-
-function tryLogPrep(obj, environment) {
-  let result;
-  JSON5 = JSON5 || require('json5');
-  try {
-    result = environment === 'development'
-      ? JSON5.stringify(obj, null, 2)
-      : JSON5.stringify(obj)
-  } catch (e) {
-  } finally {
-    return result || obj;
   }
 }
 
