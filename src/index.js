@@ -227,29 +227,35 @@ BackendAssistant.prototype.parseRepo = function (repo) {
 BackendAssistant.prototype.getHeaderUserAgent = function (headers) {
   headers = headers || {};
   return (
-    headers['user-agent'] ||
-    ''
+    headers['user-agent']
+    || ''
   )
+  .trim();
 }
 
 BackendAssistant.prototype.getHeaderCountry = function (headers) {
   headers = headers || {};
   return (
-    (headers['x-country-code'] || '').split(',')[0] ||
-    ''
-  ).trim()
+    headers['x-country-code']
+    || headers['x-appengine-country']
+    || 'ZZ'
+  )
+  .split(',')[0]
+  .trim();
 }
 
 BackendAssistant.prototype.getHeaderIp = function (headers) {
   headers = headers || {};
   return (
-    (headers['fastly-client-ip'] || '').split(',')[0] ||
-    (headers['x-forwarded-for'] || '').split(',')[0] ||
-    (headers['x-appengine-user-ip'] || '').split(',')[0] ||
-    (headers['cf-connecting-ip'] || '').split(',')[0] ||
-    (headers['fastly-temp-xff'] || '').split(',')[0] ||
-    '127.0.0.1'
-  ).trim()
+    headers['fastly-client-ip']
+    || headers['x-forwarded-for']
+    || headers['x-appengine-user-ip']
+    || headers['cf-connecting-ip']
+    || headers['fastly-temp-xff']
+    || '127.0.0.1'
+  )
+  .split(',')[0]
+  .trim();
 }
 
 function stringify(obj, replacer, spaces, cycleReplacer) {
