@@ -236,8 +236,14 @@ BackendAssistant.prototype.getHeaderUserAgent = function (headers) {
 BackendAssistant.prototype.getHeaderCountry = function (headers) {
   headers = headers || {};
   return (
-    headers['x-country-code']
+    // these are present for cloudflare requests (11/21/2020)
+    headers['cf-ipcountry']
+
+    // these are present for non-cloudflare requests (11/21/2020)
     || headers['x-appengine-country']
+
+    // Not sure about these
+    // || headers['x-country-code']
     || 'ZZ'
   )
   .split(',')[0]
@@ -247,11 +253,16 @@ BackendAssistant.prototype.getHeaderCountry = function (headers) {
 BackendAssistant.prototype.getHeaderIp = function (headers) {
   headers = headers || {};
   return (
-    headers['fastly-client-ip']
-    || headers['x-forwarded-for']
-    || headers['x-appengine-user-ip']
-    || headers['cf-connecting-ip']
+    // these are present for cloudflare requests (11/21/2020)
+    headers['cf-connecting-ip']
     || headers['fastly-temp-xff']
+
+    // these are present for non-cloudflare requests (11/21/2020)
+    || headers['x-appengine-user-ip']
+    || headers['x-forwarded-for']
+
+    // Not sure about these
+    // || headers['fastly-client-ip']
     || '127.0.0.1'
   )
   .split(',')[0]
