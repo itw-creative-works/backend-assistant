@@ -315,7 +315,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       /**
        *  TODO(developer): Process submitted field values here
        */
-      console.log(`Processed field ${fieldname}: ${val}.`);
+      // console.log(`Processed field ${fieldname}: ${val}.`);
       fields[fieldname] = val;
     });
 
@@ -325,7 +325,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
     busboy.on('file', (fieldname, file, filename) => {
       // Note: os.tmpdir() points to an in-memory file system on GCF
       // Thus, any files in it must fit in the instance's memory.
-      console.log(`Processed file ${filename}`);
+      // console.log(`Processed file ${filename}`);
       const filepath = path.join(tmpdir, filename);
       uploads[fieldname] = filepath;
 
@@ -354,9 +354,9 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       /**
        * TODO(developer): Process saved files here
        */
-      for (const file in uploads) {
-        fs.unlinkSync(uploads[file]);
-      }
+      // for (const file in uploads) {
+      //   fs.unlinkSync(uploads[file]);
+      // }
       // res.send();
       return resolve({
         fields: fields,
