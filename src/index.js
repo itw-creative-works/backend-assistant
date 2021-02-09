@@ -3,6 +3,7 @@ let JSON5;
 
 function BackendAssistant() {
   this.meta = {};
+  this.initialized = false;
 }
 
 function tryParse(input) {
@@ -69,6 +70,8 @@ BackendAssistant.prototype.init = function (ref, options) {
   if ((this.meta.environment === 'development') && ((this.request.method !== 'OPTIONS') || (this.request.method === 'OPTIONS' && options.showOptionsLog)) && (this.request.method !== 'undefined')) {
     console.log('\n\n\n\n\n');
   }
+
+  this.initialized = true;
 
   return this;
 };
@@ -268,6 +271,115 @@ BackendAssistant.prototype.getHeaderIp = function (headers) {
   .split(',')[0]
   .trim();
 }
+
+BackendAssistant.prototype.parseMultipartFormData = function (options) {
+  const self = this;
+  return new Promise(function(resolve, reject) {
+    if (!self.initialized) {
+      return reject(new Error('Cannot run .parseMultipartForm() until .init() has been called'));
+    }
+
+    options = options || {};
+
+    const path = require('path');
+    const os = require('os');
+    const fs = require('fs');
+    const req = self.ref.req;
+
+    // Node.js doesn't have a built-in multipart/form-data parsing library.
+    // Instead, we can use the 'busboy' library from NPM to parse these requests.
+    const Busboy = require('busboy');
+
+
+    // if (req.method !== 'POST') {
+    //   // Return a "method not allowed" error
+    //   return res.status(405).end();
+    // }
+    options.headers = options.headers || req.headers;
+    options.limits = options.limits || {};
+
+    const busboy = new Busboy({
+      headers: options.headers,
+      limits: options.limits,
+    });
+    const tmpdir = os.tmpdir();
+
+    // This object will accumulate all the fields, keyed by their name
+    const fields = {};
+
+    // This object will accumulate all the uploaded files, keyed by their name.
+    const uploads = {};
+
+    // This code will process each non-file field in the form.
+    busboy.on('field', (fieldname, val) => {
+      /**
+       *  TODO(developer): Process submitted field values here
+       */
+      console.log(`Processed field ${fieldname}: ${val}.`);
+      fields[fieldname] = val;
+    });
+
+    const fileWrites = [];
+
+    // This code will process each file uploaded.
+    busboy.on('file', (fieldname, file, filename) => {
+      // Note: os.tmpdir() points to an in-memory file system on GCF
+      // Thus, any files in it must fit in the instance's memory.
+      console.log(`Processed file ${filename}`);
+      const filepath = path.join(tmpdir, filename);
+      uploads[fieldname] = filepath;
+
+      const writeStream = fs.createWriteStream(filepath);
+      file.pipe(writeStream);
+
+      // File was processed by Busboy; wait for it to be written.
+      // Note: GCF may not persist saved files across invocations.
+      // Persistent files must be kept in other locations
+      // (such as Cloud Storage buckets).
+      const promise = new Promise((resolve, reject) => {
+        file.on('end', () => {
+          writeStream.end();
+        });
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+      fileWrites.push(promise);
+    });
+
+    // Triggered once all uploaded files are processed by Busboy.
+    // We still need to wait for the disk writes (saves) to complete.
+    busboy.on('finish', async () => {
+      await Promise.all(fileWrites);
+
+      /**
+       * TODO(developer): Process saved files here
+       */
+      for (const file in uploads) {
+        fs.unlinkSync(uploads[file]);
+      }
+      // res.send();
+      return resolve({
+        fields: fields,
+        uploads: uploads,
+      })
+    });
+
+    busboy.end(req.rawBody);
+
+  });
+}
+
+
+/**
+ * Parses a 'multipart/form-data' upload request
+ *
+ * @param {Object} req Cloud Function request context.
+ * @param {Object} res Cloud Function response context.
+ */
+
+
+
+
 
 function stringify(obj, replacer, spaces, cycleReplacer) {
   return JSON.stringify(obj, serializer(replacer, cycleReplacer), spaces)
