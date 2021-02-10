@@ -272,6 +272,7 @@ BackendAssistant.prototype.getHeaderIp = function (headers) {
   .trim();
 }
 
+// https://cloud.google.com/functions/docs/writing/http#multipart_data
 BackendAssistant.prototype.parseMultipartFormData = function (options) {
   const self = this;
   return new Promise(function(resolve, reject) {
