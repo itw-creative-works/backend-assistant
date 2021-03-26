@@ -38,6 +38,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.ref.req = ref.req || {};
   this.ref.admin = ref.admin || {};
   this.ref.functions = ref.functions || {};
+  this.ref.Manager = ref.Manager || {};
 
   // Set stuff about request
   this.request = {};
@@ -81,12 +82,12 @@ BackendAssistant.prototype.getEnvironment = function () {
 };
 
 BackendAssistant.prototype.logProd = function () {
-  let self = this;
+  const self = this;
   self._log.apply(this, args);
 };
 
 BackendAssistant.prototype.log = function () {
-  let self = this;
+  const self = this;
   let args = Array.prototype.slice.call(arguments);
   let last = args[args.length - 1];
   let override = (typeof last === 'object' && last.environment === 'production');
@@ -99,14 +100,14 @@ BackendAssistant.prototype.log = function () {
 };
 
 BackendAssistant.prototype.error = function () {
-  let self = this;
+  const self = this;
   let args = Array.prototype.slice.call(arguments);
   args.unshift('error');
   self.log.apply(self, args);
 };
 
 BackendAssistant.prototype._log = function() {
-  let self = this;
+  const self = this;
 
   // 1. Convert args to a normal array
   let logs = [...Array.prototype.slice.call(arguments)];
@@ -127,11 +128,35 @@ BackendAssistant.prototype._log = function() {
   } else {
     console.log.apply(console, logs);
   }
-
 }
 
+BackendAssistant.prototype.errorManager = function(e, options) {
+  const self = this;
+  options = options || {};
+  options.log = typeof options.log === 'undefined' ? true : options.log;
+  options.sentry = typeof options.sentry === 'undefined' ? true : options.sentry;
+  options.send = typeof options.send === 'undefined' ? true : options.send;
+  options.code = typeof options.code === 'undefined' ? 501 : options.code;
+
+  // Log the error
+  if (options.log) {
+    self.error(e);
+  }
+
+  // Send error to Sentry
+  if (options.sentry) {
+    self.ref.Manager.libraries.sentry.captureException(e);
+  }
+
+  // Quit and respond to the request
+  if (options.send) {
+    return self.ref.res.status(options.code).send(e);
+  }
+}
+
+
 BackendAssistant.prototype.authenticate = async function (options) {
-  let self = this;
+  const self = this;
   let admin = self.ref.admin;
   let functions = self.ref.functions;
   let req = self.ref.req;
