@@ -150,7 +150,7 @@ BackendAssistant.prototype.errorManager = function(e, options) {
 
   // Quit and respond to the request
   if (options.send) {
-    return self.ref.res.status(options.code).send(e);
+    return self.ref.res.status(options.code).send(e ? e.message || e : 'Unknown error');
   }
 }
 
