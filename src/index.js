@@ -137,20 +137,21 @@ BackendAssistant.prototype.errorManager = function(e, options) {
   options.sentry = typeof options.sentry === 'undefined' ? true : options.sentry;
   options.send = typeof options.send === 'undefined' ? true : options.send;
   options.code = typeof options.code === 'undefined' ? 501 : options.code;
+  const newError = e instanceof Error ? e : new Error(e);
 
   // Log the error
   if (options.log) {
-    self.error(e);
+    self.error(newError);
   }
 
   // Send error to Sentry
   if (options.sentry) {
-    self.ref.Manager.libraries.sentry.captureException(e);
+    self.ref.Manager.libraries.sentry.captureException(newError);
   }
 
   // Quit and respond to the request
   if (options.send) {
-    return self.ref.res.status(options.code).send(e ? e.message || e : 'Unknown error');
+    return self.ref.res.status(options.code).send(newError ? newError.message || newError : 'Unknown error');
   }
 }
 
