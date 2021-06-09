@@ -28,9 +28,9 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.meta.startTime.timestamp = new Date().toISOString();
   this.meta.startTime.timestampUNIX = Math.floor((+new Date(this.meta.startTime.timestamp)) / 1000);
 
-  this.meta.name = options.name || process.env.FUNCTION_TARGET || 'unnamed';
+  this.meta.name = options.functionName || options.name || process.env.FUNCTION_TARGET || 'unnamed';
   this.meta.environment = options.environment || this.getEnvironment();
-  this.meta.type = process.env.FUNCTION_SIGNATURE_TYPE;
+  this.meta.type = options.functionType || process.env.FUNCTION_SIGNATURE_TYPE || 'unknown';
 
   this.ref = {};
   ref = ref || {};
@@ -78,7 +78,16 @@ BackendAssistant.prototype.init = function (ref, options) {
 };
 
 BackendAssistant.prototype.getEnvironment = function () {
-  return (process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true' ? 'development' : 'production')
+  // return (process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true' || process.env.ENVIRONMENT !== 'production' ? 'development' : 'production')
+  if (process.env.ENVIRONMENT === 'production') {
+    return 'production';
+  } else if (process.env.ENVIRONMENT === 'development') {
+    return 'development';
+  } else if (process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true') {
+    return 'development'
+  } else {
+    return 'production'
+  }
 };
 
 BackendAssistant.prototype.logProd = function () {
@@ -177,7 +186,13 @@ BackendAssistant.prototype.authenticate = async function (options) {
   } else if (data.backendManagerKey || data.authenticationToken) {
     self.log('Found "backendManagerKey" or "authenticationToken" parameter');
     // Check with custom BEM Token
-    let storedApiKey = functions.config().backend_manager ? functions.config().backend_manager.key : '';
+    let storedApiKey;
+    try {
+      storedApiKey = _.get(functions.config(), 'backend_manager.key', '')
+    } catch (e) {
+
+    }
+
     if (storedApiKey && (storedApiKey === data.backendManagerKey || storedApiKey === data.authenticationToken)) {
       self.request.user.authenticated = true;
       self.request.user.roles.admin = true;
