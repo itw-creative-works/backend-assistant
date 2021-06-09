@@ -339,8 +339,8 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
     options.headers = options.headers || req.headers;
     options.limits = options.limits || {};
 
-    console.log('++++++++options.headers', options.headers);
-    console.log('++++++++req.rawBody', req.rawBody);
+    // console.log('++++++++options.headers', options.headers);
+    // console.log('++++++++req.rawBody', req.rawBody);
     // console.log('++++++++options.limits', options.limits);
     // console.log('----req.rawBody', req.rawBody);
 
@@ -363,7 +363,6 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
        */
       // console.log(`Processed field ${fieldname}: ${val}.`);
       fields[fieldname] = val;
-      console.log('----FIELD', fieldname);
     });
 
     const fileWrites = [];
@@ -373,7 +372,6 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       // Note: os.tmpdir() points to an in-memory file system on GCF
       // Thus, any files in it must fit in the instance's memory.
       // console.log(`Processed file ${filename}`);
-      console.log('----FILE', fieldname);
       const filepath = path.join(tmpdir, filename);
       uploads[fieldname] = filepath;
 
