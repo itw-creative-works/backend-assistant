@@ -28,7 +28,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.meta.startTime.timestamp = new Date().toISOString();
   this.meta.startTime.timestampUNIX = Math.floor((+new Date(this.meta.startTime.timestamp)) / 1000);
 
-  this.meta.name = options.functionName || options.name || process.env.FUNCTION_TARGET || 'unnamed';
+  this.meta.name = options.functionName || process.env.FUNCTION_TARGET || 'unnamed';
   this.meta.environment = options.environment || this.getEnvironment();
   this.meta.type = options.functionType || process.env.FUNCTION_SIGNATURE_TYPE || 'unknown';
 
@@ -81,10 +81,8 @@ BackendAssistant.prototype.getEnvironment = function () {
   // return (process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true' || process.env.ENVIRONMENT !== 'production' ? 'development' : 'production')
   if (process.env.ENVIRONMENT === 'production') {
     return 'production';
-  } else if (process.env.ENVIRONMENT === 'development') {
+  } else if (process.env.ENVIRONMENT === 'development' || process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true' || process.env.TERM_PROGRAM === 'Apple_Terminal') {
     return 'development';
-  } else if (process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true') {
-    return 'development'
   } else {
     return 'production'
   }
