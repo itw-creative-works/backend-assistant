@@ -323,6 +323,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       return reject(new Error('Cannot run .parseMultipartForm() until .init() has been called'));
     }
     const existingData = self.request.multipartData;
+    console.log('-----existingData', existingData, Object.keys(_.get(existingData, 'fields', {})).length, Object.keys(_.get(existingData, 'files', {})).length);
     if (Object.keys(_.get(existingData, 'fields', {})).length + Object.keys(_.get(existingData, 'files', {})).length > 0) {
       return resolve(existingData);
     }
@@ -412,10 +413,12 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       //   fs.unlinkSync(uploads[file]);
       // }
       // res.send();
-      return resolve({
+      self.request.multipartData = {
         fields: fields,
-        uploads: uploads,
-      })
+        files: uploads,
+      }
+      
+      return resolve(self.request.multipartData)
     });
 
     // busboy.end(req.rawBody);
