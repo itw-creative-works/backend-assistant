@@ -61,6 +61,10 @@ BackendAssistant.prototype.init = function (ref, options) {
     _.cloneDeep(this.request.body || {}),
     _.cloneDeep(this.request.query || {})
   );
+  this.request.multipartData = {
+    fields: {},
+    files: {},
+  };
 
   // Constants
   this.constant = {};
@@ -317,6 +321,10 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
   return new Promise(function(resolve, reject) {
     if (!self.initialized) {
       return reject(new Error('Cannot run .parseMultipartForm() until .init() has been called'));
+    }
+    const existingData = self.request.multipartData;
+    if (Object.keys(_.get(existingData, 'fields', {})).length + Object.keys(_.get(existingData, 'files', {})).length > 0) {
+      return resolve(existingData);
     }
 
     options = options || {};
