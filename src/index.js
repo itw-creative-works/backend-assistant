@@ -252,7 +252,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
     })
     return self.request.user;
   } catch (error) {
-    self.console.error();('Error while verifying Firebase ID token:', error, logOptions);
+    self.error('Error while verifying Firebase ID token:', error, logOptions);
     return self.request.user;
   }
 };
