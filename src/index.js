@@ -176,17 +176,17 @@ BackendAssistant.prototype.authenticate = async function (options) {
   let data = self.request.data;
   let idToken;
   options = options || {};
+  const logOptions = {environment: options.log ? 'production' : 'development'}
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-    self.log('Found "Authorization" header');
     // Read the ID Token from the Authorization header.
     idToken = req.headers.authorization.split('Bearer ')[1];
+    self.log('Found "Authorization" header', idToken, logOptions);
   } else if (req.cookies && req.cookies.__session) {
-    self.log('Found "__session" cookie');
     // Read the ID Token from cookie.
     idToken = req.cookies.__session;
+    self.log('Found "__session" cookie', idToken, logOptions);
   } else if (data.backendManagerKey || data.authenticationToken) {
-    self.log('Found "backendManagerKey" or "authenticationToken" parameter');
     // Check with custom BEM Token
     let storedApiKey;
     try {
@@ -195,13 +195,17 @@ BackendAssistant.prototype.authenticate = async function (options) {
 
     }
 
+    idToken = data.backendManagerKey || data.authenticationToken;
+
+    self.log('Found "backendManagerKey" or "authenticationToken" parameter', {storedApiKey: storedApiKey, idToken: idToken}, logOptions);
+
     if (storedApiKey && (storedApiKey === data.backendManagerKey || storedApiKey === data.authenticationToken)) {
       self.request.user.authenticated = true;
       self.request.user.roles.admin = true;
       return self.request.user;
     }
-    idToken = data.backendManagerKey || data.authenticationToken;
   } else if (options.apiKey) {
+    self.log('Found "options.apiKey"', options.apiKey, logOptions);
     if (options.apiKey.includes('test')) {
       return self.request.user;
     }
@@ -223,7 +227,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
       'Make sure you authenticate your request by providing the following HTTP header:',
       'Authorization: Bearer <Firebase ID Token>',
       'or by passing a "__session" cookie.',
-      'or by passing backendManagerKey or authenticationToken in the body or query');
+      'or by passing backendManagerKey or authenticationToken in the body or query', logOptions);
     return self.request.user;
   }
 
@@ -231,7 +235,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
   try {
     const decodedIdToken = await admin.auth().verifyIdToken(idToken);
     if (options.debug) {
-      self.log('Token correctly decoded', decodedIdToken.email, decodedIdToken.user_id);
+      self.log('Token correctly decoded', decodedIdToken.email, decodedIdToken.user_id, logOptions);
     }
     await admin.firestore().doc(`users/${decodedIdToken.user_id}`)
     .get()
@@ -243,12 +247,12 @@ BackendAssistant.prototype.authenticate = async function (options) {
       self.request.user.auth.uid = decodedIdToken.user_id;
       self.request.user.auth.email = decodedIdToken.email;
       if (options.debug) {
-        self.log('Found user doc', self.request.user)
+        self.log('Found user doc', self.request.user, logOptions)
       }
     })
     return self.request.user;
   } catch (error) {
-    self.log('Error while verifying Firebase ID token:', error);
+    self.console.error();('Error while verifying Firebase ID token:', error, logOptions);
     return self.request.user;
   }
 };
