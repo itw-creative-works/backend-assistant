@@ -49,7 +49,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request.userAgent = this.getHeaderUserAgent(this.ref.req.headers);
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
-  this.request.user = require('./user.json');
+  this.request.user = require('./user.js')();
   if (options.accept === 'json') {
     this.request.body = tryParse(this.ref.req.body || '{}');
     this.request.query = tryParse(this.ref.req.query || '{}');
@@ -210,7 +210,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
       return self.request.user;
     }
     await admin.firestore().collection(`users`)
-    .where("api.privateKey", "==", options.apiKey)
+    .where('api.privateKey', '==', options.apiKey)
     .get()
     .then(function(querySnapshot) {
       querySnapshot.forEach(function(doc) {
@@ -219,7 +219,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
       });
     })
     .catch(function(error) {
-      console.log("Error getting documents: ", error);
+      console.error('Error getting documents: ', error);
     });
     return self.request.user;
   } else {
