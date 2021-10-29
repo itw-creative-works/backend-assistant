@@ -190,7 +190,8 @@ BackendAssistant.prototype.authenticate = async function (options) {
     // Check with custom BEM Token
     let storedApiKey;
     try {
-      storedApiKey = _.get(functions.config(), 'backend_manager.key', '')
+      const workingConfig = _.get(self.ref.Manager, 'config') || functions.config();
+      storedApiKey = _.get(workingConfig, 'backend_manager.key', '')
     } catch (e) {
 
     }
