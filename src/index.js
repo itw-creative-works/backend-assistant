@@ -182,7 +182,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
   options = options || {};
   const logOptions = {environment: options.log ? 'production' : 'development'}
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+  if (req.headers && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     // Read the ID Token from the Authorization header.
     idToken = req.headers.authorization.split('Bearer ')[1];
     self.log('Found "Authorization" header', idToken, logOptions);
