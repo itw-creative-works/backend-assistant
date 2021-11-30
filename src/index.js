@@ -161,8 +161,12 @@ BackendAssistant.prototype.errorManager = function(e, options) {
   }
 
   // Quit and respond to the request
-  if (options.send) {
-    return self.ref.res.status(options.code).send(newError ? newError.message || newError : 'Unknown error');
+  if (options.send && self.ref.res) {
+    self.ref.res.status(options.code).send(newError ? newError.message || newError : 'Unknown error');
+  }
+
+  return {
+    error: newError,
   }
 }
 
