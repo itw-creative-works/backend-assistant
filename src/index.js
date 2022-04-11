@@ -147,8 +147,15 @@ BackendAssistant.prototype.errorManager = function(e, options) {
   options.log = typeof options.log === 'undefined' ? true : options.log;
   options.sentry = typeof options.sentry === 'undefined' ? true : options.sentry;
   options.send = typeof options.send === 'undefined' ? true : options.send;
-  options.code = typeof options.code === 'undefined' ? 501 : options.code;
+  options.code = typeof options.code === 'undefined' ? 500 : options.code;
   const newError = e instanceof Error ? e : new Error(e);
+
+  // Attach properties
+  Object.keys(options)
+  .forEach((item, i) => {
+    Object.assign(newError , { [item]: options[item] })
+  });
+
 
   // Log the error
   if (options.log) {
