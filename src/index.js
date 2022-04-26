@@ -354,7 +354,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
 
     // Node.js doesn't have a built-in multipart/form-data parsing library.
     // Instead, we can use the 'busboy' library from NPM to parse these requests.
-    const Busboy = require('busboy');
+    const busboy = require('busboy');
 
 
     // if (req.method !== 'POST') {
@@ -369,7 +369,9 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
     // console.log('++++++++options.limits', options.limits);
     // console.log('----req.rawBody', req.rawBody);
 
-    const busboy = new Busboy({
+    // https://github.com/mscdex/busboy
+    // https://github.com/mscdex/busboy/issues/266
+    const bb = busboy({
       headers: options.headers,
       limits: options.limits,
     });
@@ -382,10 +384,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
     const uploads = {};
 
     // This code will process each non-file field in the form.
-    busboy.on('field', (fieldname, val) => {
-      /**
-       *  TODO(developer): Process submitted field values here
-       */
+    bb.on('field', (fieldname, val, info) => {
       // console.log(`Processed field ${fieldname}: ${val}.`);
       fields[fieldname] = val;
     });
@@ -393,10 +392,10 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
     const fileWrites = [];
 
     // This code will process each file uploaded.
-    busboy.on('file', (fieldname, file, filename) => {
+    bb.on('file', (fieldname, file, info) => {
       // Note: os.tmpdir() points to an in-memory file system on GCF
       // Thus, any files in it must fit in the instance's memory.
-      // console.log(`Processed file ${filename}`);
+      const filename = info.filename;
       const filepath = path.join(tmpdir, filename);
       uploads[fieldname] = filepath;
 
@@ -419,7 +418,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
 
     // Triggered once all uploaded files are processed by Busboy.
     // We still need to wait for the disk writes (saves) to complete.
-    busboy.on('finish', async () => {
+    bb.on('finish', async () => {
       await Promise.all(fileWrites);
 
       /**
@@ -434,11 +433,11 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
         files: uploads,
       }
 
-      return resolve(self.request.multipartData)
+      return resolve(self.request.multipartData);
     });
 
-    // busboy.end(req.rawBody);
-    return req.pipe(busboy);
+    // bb.end(req.rawBody);
+    return req.pipe(bb);
   });
 }
 
