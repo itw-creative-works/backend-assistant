@@ -1,3 +1,4 @@
+const os = require('os');
 const path = require('path');
 const _ = require('lodash');
 const uuid = require('uuid');
@@ -351,7 +352,6 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
 
     options = options || {};
 
-    const os = require('os');
     const fs = require('fs');
     const req = self.ref.req;
     const res = self.ref.res;
