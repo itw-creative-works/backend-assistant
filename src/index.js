@@ -359,7 +359,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
     // Node.js doesn't have a built-in multipart/form-data parsing library.
     // Instead, we can use the 'busboy' library from NPM to parse these requests.
     const busboy = require('busboy');
-
+    const jetpack = require('fs-jetpack');
 
     // if (req.method !== 'POST') {
     //   // Return a "method not allowed" error
@@ -398,10 +398,11 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
     bb.on('file', (fieldname, file, info) => {
       // Note: os.tmpdir() points to an in-memory file system on GCF
       // Thus, any files in it must fit in the instance's memory.
+      jetpack.dir(self.tmpdir)
+      
       const filename = info.filename;
       const filepath = path.join(self.tmpdir, filename);
       uploads[fieldname] = filepath;
-
       const writeStream = fs.createWriteStream(filepath);
       file.pipe(writeStream);
 
