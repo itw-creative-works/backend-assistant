@@ -1,4 +1,5 @@
-let _ = require('lodash');
+const path = require('path');
+const _ = require('lodash');
 const uuid = require('uuid');
 let JSON5;
 
@@ -350,7 +351,6 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
 
     options = options || {};
 
-    const path = require('path');
     const os = require('os');
     const fs = require('fs');
     const req = self.ref.req;
