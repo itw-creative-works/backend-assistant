@@ -1,4 +1,5 @@
 let _ = require('lodash');
+const uuid = require('uuid');
 let JSON5;
 
 function BackendAssistant() {
@@ -21,6 +22,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   options = options || {};
   options.accept = options.accept || 'json';
   options.showOptionsLog = typeof options.showOptionsLog !== 'undefined' ? options.showOptionsLog : false;
+  options.fileSavePath = options.fileSavePath || process.env.npm_package_name || '';
 
   this.meta = {};
 
@@ -75,6 +77,8 @@ BackendAssistant.prototype.init = function (ref, options) {
   if ((this.meta.environment === 'development') && ((this.request.method !== 'OPTIONS') || (this.request.method === 'OPTIONS' && options.showOptionsLog)) && (this.request.method !== 'undefined')) {
     console.log('\n\n\n\n\n');
   }
+
+  this.tmpdir = path.resolve(os.tmpdir(), options.fileSavePath, uuid.v4());
 
   this.initialized = true;
 
@@ -375,7 +379,6 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       headers: options.headers,
       limits: options.limits,
     });
-    const tmpdir = os.tmpdir();
 
     // This object will accumulate all the fields, keyed by their name
     const fields = {};
@@ -396,7 +399,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       // Note: os.tmpdir() points to an in-memory file system on GCF
       // Thus, any files in it must fit in the instance's memory.
       const filename = info.filename;
-      const filepath = path.join(tmpdir, filename);
+      const filepath = path.join(self.tmpdir, filename);
       uploads[fieldname] = filepath;
 
       const writeStream = fs.createWriteStream(filepath);
