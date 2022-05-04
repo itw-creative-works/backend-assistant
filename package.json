@@ -1,6 +1,6 @@
 {
   "name": "backend-assistant",
-  "version": "0.0.63",
+  "version": "0.0.64",
   "description": "Powerful assistive functions for Firebase backends",
   "main": "src/index.js",
   "scripts": {

@@ -24,6 +24,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   options = options || {};
   options.accept = options.accept || 'json';
   options.showOptionsLog = typeof options.showOptionsLog !== 'undefined' ? options.showOptionsLog : false;
+  options.optionsLogString = typeof options.optionsLogString !== 'undefined' ? options.optionsLogString : '\n\n\n\n\n';
   options.fileSavePath = options.fileSavePath || process.env.npm_package_name || '';
 
   this.meta = {};
@@ -76,8 +77,13 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.constant.pastTime.timestamp = '1999-01-01T00:00:00Z';
   this.constant.pastTime.timestampUNIX = 915148800;
 
-  if ((this.meta.environment === 'development') && ((this.request.method !== 'OPTIONS') || (this.request.method === 'OPTIONS' && options.showOptionsLog)) && (this.request.method !== 'undefined')) {
-    console.log('\n\n\n\n\n');
+  if (
+    (this.meta.environment === 'development')
+    && ((this.request.method !== 'OPTIONS') || (this.request.method === 'OPTIONS' && options.showOptionsLog))
+    && (this.request.method !== 'undefined')
+    // && (this.request.method !== 'undefined' && typeof this.request.method !== 'undefined')
+  ) {
+    console.log(options.optionsLogString);
   }
 
   this.tmpdir = path.resolve(os.tmpdir(), options.fileSavePath, uuid.v4());
@@ -399,7 +405,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       // Note: os.tmpdir() points to an in-memory file system on GCF
       // Thus, any files in it must fit in the instance's memory.
       jetpack.dir(self.tmpdir)
-      
+
       const filename = info.filename;
       const filepath = path.join(self.tmpdir, filename);
       uploads[fieldname] = filepath;
