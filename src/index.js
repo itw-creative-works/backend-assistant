@@ -247,10 +247,10 @@ BackendAssistant.prototype.authenticate = async function (options) {
     });
     return self.request.user;
   } else {
-    self.log('No Firebase ID token was passed as a Bearer token in the Authorization header.',
-      'Make sure you authenticate your request by providing the following HTTP header:',
+    self.log('No Firebase ID token was able to be extracted.',
+      'Make sure you authenticate your request by providing either the following HTTP header:',
       'Authorization: Bearer <Firebase ID Token>',
-      'or by passing a "__session" cookie.',
+      'or by passing a "__session" cookie',
       'or by passing backendManagerKey or authenticationToken in the body or query', logOptions);
     return self.request.user;
   }
