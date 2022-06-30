@@ -343,7 +343,13 @@ BackendAssistant.prototype.getHeaderIp = function (headers) {
   .trim();
 }
 
-// https://cloud.google.com/functions/docs/writing/http#multipart_data
+/**
+ * Parses a 'multipart/form-data' upload request
+ *
+ * @param {Object} req Cloud Function request context.
+ * @param {Object} res Cloud Function response context.
+ */
+ // https://cloud.google.com/functions/docs/writing/http#multipart_data
 BackendAssistant.prototype.parseMultipartFormData = function (options) {
   const self = this;
   return new Promise(function(resolve, reject) {
@@ -402,6 +408,9 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
 
     // This code will process each file uploaded.
     bb.on('file', (fieldname, file, info) => {
+      // file.on('error', (e) => {
+      //   console.error('File error', e);
+      // });
       // Note: os.tmpdir() points to an in-memory file system on GCF
       // Thus, any files in it must fit in the instance's memory.
       jetpack.dir(self.tmpdir)
@@ -411,6 +420,7 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       uploads[fieldname] = filepath;
       const writeStream = fs.createWriteStream(filepath);
       file.pipe(writeStream);
+
 
       // File was processed by Busboy; wait for it to be written.
       // Note: GCF may not persist saved files across invocations.
@@ -425,6 +435,10 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       });
       fileWrites.push(promise);
     });
+
+    // bb.on('error', async (e) => {
+    //   console.error('Busboy error', e);
+    // })
 
     // Triggered once all uploaded files are processed by Busboy.
     // We still need to wait for the disk writes (saves) to complete.
@@ -446,22 +460,14 @@ BackendAssistant.prototype.parseMultipartFormData = function (options) {
       return resolve(self.request.multipartData);
     });
 
-    // bb.end(req.rawBody);
-    return req.pipe(bb);
+    // Because of an error when using in both Optiic glitch server and ITWCW firebase functions
+    if (req.rawBody) {
+      return bb.end(req.rawBody);
+    } else {
+      return req.pipe(bb);
+    }
   });
 }
-
-
-/**
- * Parses a 'multipart/form-data' upload request
- *
- * @param {Object} req Cloud Function request context.
- * @param {Object} res Cloud Function response context.
- */
-
-
-
-
 
 function stringify(obj, replacer, spaces, cycleReplacer) {
   return JSON.stringify(obj, serializer(replacer, cycleReplacer), spaces)
