@@ -54,7 +54,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request.userAgent = this.getHeaderUserAgent(this.ref.req.headers);
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
-  this.request.user = this.resolveAccount();
+  this.request.user = this.resolveAccount({authenticated: false});
   if (options.accept === 'json') {
     this.request.body = tryParse(this.ref.req.body || '{}');
     this.request.query = tryParse(this.ref.req.query || '{}');
@@ -203,6 +203,11 @@ BackendAssistant.prototype.authenticate = async function (options) {
   const logOptions = {environment: options.log ? 'production' : 'development'}
 
   function _resolve(user) {
+    user = user || {};
+    user.authenticated = typeof user.authenticated === 'undefined'
+      ? false
+      : user.authenticated;
+
     if (options.resolve) {
       self.request.user = self.resolveAccount(user);
       return self.request.user;
@@ -293,11 +298,6 @@ BackendAssistant.prototype.authenticate = async function (options) {
 
 BackendAssistant.prototype.resolveAccount = function (user) {
   const ResolveAccount = new (require('resolve-account'))();
-  user = user || {};
-  user.authenticated = typeof user.authenticated === 'undefined'
-    ? false
-    : user.authenticated;
-
   return ResolveAccount.resolve(undefined, user)
 }
 
