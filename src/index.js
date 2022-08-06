@@ -54,7 +54,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request.userAgent = this.getHeaderUserAgent(this.ref.req.headers);
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
-  this.request.user = require('./user.js')();
+  this.request.user = resolveAccount();
   if (options.accept === 'json') {
     this.request.body = tryParse(this.ref.req.body || '{}');
     this.request.query = tryParse(this.ref.req.query || '{}');
@@ -199,7 +199,16 @@ BackendAssistant.prototype.authenticate = async function (options) {
   let data = self.request.data;
   let idToken;
   options = options || {};
+  options.resolve = typeof options.resolve === 'undefined' ? true : options.resolve;
   const logOptions = {environment: options.log ? 'production' : 'development'}
+
+  function _resolve(user) {
+    if (options.resolve) {
+      return resolveAccount(user)
+    } else {
+      return user;
+    }
+  }
 
   if (req.headers && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     // Read the ID Token from the Authorization header.
@@ -226,12 +235,12 @@ BackendAssistant.prototype.authenticate = async function (options) {
     if (storedApiKey && (storedApiKey === data.backendManagerKey || storedApiKey === data.authenticationToken)) {
       self.request.user.authenticated = true;
       self.request.user.roles.admin = true;
-      return self.request.user;
+      return _resolve(self.request.user);
     }
   } else if (options.apiKey) {
     self.log('Found "options.apiKey"', options.apiKey, logOptions);
     if (options.apiKey.includes('test')) {
-      return self.request.user;
+      return _resolve(self.request.user);
     }
     await admin.firestore().collection(`users`)
     .where('api.privateKey', '==', options.apiKey)
@@ -245,14 +254,14 @@ BackendAssistant.prototype.authenticate = async function (options) {
     .catch(function(error) {
       console.error('Error getting documents: ', error);
     });
-    return self.request.user;
+    return _resolve(self.request.user);
   } else {
     self.log('No Firebase ID token was able to be extracted.',
       'Make sure you authenticate your request by providing either the following HTTP header:',
       'Authorization: Bearer <Firebase ID Token>',
       'or by passing a "__session" cookie',
       'or by passing backendManagerKey or authenticationToken in the body or query', logOptions);
-    return self.request.user;
+    return _resolve(self.request.user);
   }
 
   // Check with firebase
@@ -274,10 +283,10 @@ BackendAssistant.prototype.authenticate = async function (options) {
         self.log('Found user doc', self.request.user, logOptions)
       }
     })
-    return self.request.user;
+    return _resolve(self.request.user);
   } catch (error) {
     self.error('Error while verifying Firebase ID token:', error, logOptions);
-    return self.request.user;
+    return _resolve(self.request.user);
   }
 };
 
@@ -493,6 +502,11 @@ function serializer(replacer, cycleReplacer) {
 
     return replacer == null ? value : replacer.call(this, key, value)
   }
+}
+
+function resolveAccount(user) {
+  const ResolveAccount = new (require('resolve-account'))();
+  return ResolveAccount.resolve(undefined, user)
 }
 
 module.exports = BackendAssistant;
