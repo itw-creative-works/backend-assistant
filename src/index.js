@@ -54,7 +54,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request.userAgent = this.getHeaderUserAgent(this.ref.req.headers);
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
-  this.request.user = resolveAccount();
+  this.request.user = self.resolveAccount();
   if (options.accept === 'json') {
     this.request.body = tryParse(this.ref.req.body || '{}');
     this.request.query = tryParse(this.ref.req.query || '{}');
@@ -204,7 +204,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
 
   function _resolve(user) {
     if (options.resolve) {
-      return resolveAccount(user)
+      return self.resolveAccount(user)
     } else {
       return user;
     }
@@ -289,6 +289,11 @@ BackendAssistant.prototype.authenticate = async function (options) {
     return _resolve(self.request.user);
   }
 };
+
+BackendAssistant.prototype.resolveAccount = function (user) {
+  const ResolveAccount = new (require('resolve-account'))();
+  return ResolveAccount.resolve(undefined, user)
+}
 
 BackendAssistant.prototype.parseRepo = function (repo) {
   let repoSplit = repo.split('/');
@@ -502,11 +507,6 @@ function serializer(replacer, cycleReplacer) {
 
     return replacer == null ? value : replacer.call(this, key, value)
   }
-}
-
-function resolveAccount(user) {
-  const ResolveAccount = new (require('resolve-account'))();
-  return ResolveAccount.resolve(undefined, user)
 }
 
 module.exports = BackendAssistant;
