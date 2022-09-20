@@ -97,7 +97,13 @@ BackendAssistant.prototype.getEnvironment = function () {
   // return (process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true' || process.env.ENVIRONMENT !== 'production' ? 'development' : 'production')
   if (process.env.ENVIRONMENT === 'production') {
     return 'production';
-  } else if (process.env.ENVIRONMENT === 'development' || process.env.FUNCTIONS_EMULATOR === true || process.env.FUNCTIONS_EMULATOR === 'true' || process.env.TERM_PROGRAM === 'Apple_Terminal') {
+  } else if (
+    process.env.ENVIRONMENT === 'development' 
+    || process.env.FUNCTIONS_EMULATOR === true 
+    || process.env.FUNCTIONS_EMULATOR === 'true' 
+    || process.env.TERM_PROGRAM === 'Apple_Terminal'
+    || process.env.TERM_PROGRAM === 'vscode'
+  ) {
     return 'development';
   } else {
     return 'production'
