@@ -29,21 +29,5 @@
     "lodash": "^4.17.21",
     "resolve-account": "^0.0.5",
     "uuid": "^8.3.2"
-  },
-  "allDependencies": {
-    "busboy": "^1.6.0",
-    "fs-jetpack": "^4.3.1",
-    "json5": "^2.2.1",
-    "lodash": "^4.17.21",
-    "resolve-account": "^0.0.5",
-    "uuid": "^8.3.2"
-  },
-  "allDependenciesKeys": [
-    "busboy",
-    "fs-jetpack",
-    "json5",
-    "lodash",
-    "resolve-account",
-    "uuid"
-  ]
+  }
 }
