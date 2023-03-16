@@ -49,9 +49,20 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request = {};
   this.request.referrer = (this.ref.req.headers || {}).referrer || (this.ref.req.headers || {}).referer || '';
   this.request.method = (this.ref.req.method || undefined);
+
+  // Get geo-location data
   this.request.ip = this.getHeaderIp(this.ref.req.headers);
+  this.request.continent = this.getHeaderContinent(this.ref.req.headers);
   this.request.country = this.getHeaderCountry(this.ref.req.headers);
+  this.request.city = this.getHeaderCity(this.ref.req.headers);
+  this.request.latitude = this.getHeaderLatitude(this.ref.req.headers);
+  this.request.longitude = this.getHeaderLongitude(this.ref.req.headers);
+
+  // Get User Agent data
   this.request.userAgent = this.getHeaderUserAgent(this.ref.req.headers);
+  this.request.language = this.getHeaderLanguage(this.ref.req.headers);
+  this.request.platform = this.getHeaderPlatform(this.ref.req.headers);
+
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
   this.request.user = this.resolveAccount({authenticated: false});
@@ -324,32 +335,6 @@ BackendAssistant.prototype.parseRepo = function (repo) {
   }
 };
 
-BackendAssistant.prototype.getHeaderUserAgent = function (headers) {
-  headers = headers || {};
-  return (
-    headers['user-agent']
-    || ''
-  )
-  .trim();
-}
-
-BackendAssistant.prototype.getHeaderCountry = function (headers) {
-  headers = headers || {};
-  return (
-    // these are present for cloudflare requests (11/21/2020)
-    headers['cf-ipcountry']
-
-    // these are present for non-cloudflare requests (11/21/2020)
-    || headers['x-appengine-country']
-
-    // Not sure about these
-    // || headers['x-country-code']
-    || 'ZZ'
-  )
-  .split(',')[0]
-  .trim();
-}
-
 BackendAssistant.prototype.getHeaderIp = function (headers) {
   headers = headers || {};
   return (
@@ -366,6 +351,108 @@ BackendAssistant.prototype.getHeaderIp = function (headers) {
     || '127.0.0.1'
   )
   .split(',')[0]
+  .trim();
+}
+
+BackendAssistant.prototype.getHeaderContinent = function (headers) {
+  headers = headers || {};
+  return (
+    // these are present for cloudflare requests (11/21/2020)
+    headers['cf-ipcontinent']
+
+    // Not sure about these
+    // || headers['x-country-code']
+    || 'ZZ'
+  )
+  .split(',')[0]
+  .trim();
+}
+
+BackendAssistant.prototype.getHeaderCountry = function (headers) {
+  headers = headers || {};
+  return (
+    // these are present for cloudflare requests (11/21/2020)
+    headers['cf-ipcountry']
+
+    // 
+    || headers['x-country-code']
+
+    // these are present for non-cloudflare requests (11/21/2020)
+    || headers['x-appengine-country']
+
+    // Not sure about these
+    // || headers['x-country-code']
+    || 'ZZ'
+  )
+  .split(',')[0]
+  .trim();
+}
+
+BackendAssistant.prototype.getHeaderCity = function (headers) {
+  headers = headers || {};
+  return (
+    // these are present for cloudflare requests (11/21/2020)
+    headers['cf-ipcity']
+
+    // Not sure about these
+    || 'Unknown'
+  )
+  .split(',')[0]
+  .trim();
+}
+
+BackendAssistant.prototype.getHeaderLatitude = function (headers) {
+  headers = headers || {};
+  return parseFloat((
+    // these are present for cloudflare requests (11/21/2020)
+    headers['cf-iplatitude']
+
+    // Not sure about these
+    || '0'
+  )
+  .split(',')[0]
+  .trim());
+}
+
+BackendAssistant.prototype.getHeaderLongitude = function (headers) {
+  headers = headers || {};
+  return parseFloat((
+    // these are present for cloudflare requests (11/21/2020)
+    headers['cf-iplongitude']
+
+    // Not sure about these
+    || '0'
+  )
+  .split(',')[0]
+  .trim());
+}
+
+
+BackendAssistant.prototype.getHeaderUserAgent = function (headers) {
+  headers = headers || {};
+  return (
+    headers['user-agent']
+    || ''
+  )
+  .trim();
+}
+
+BackendAssistant.prototype.getHeaderLanguage = function (headers) {
+  headers = headers || {};
+  return (
+    headers['accept-language']
+    || ''
+  )
+  .trim();
+}
+
+BackendAssistant.prototype.getHeaderPlatform = function (headers) {
+  headers = headers || {};
+  return (
+    headers['sec-ch-ua-platform']
+    || ''
+  )
+  .replace(/"/ig, '')
   .trim();
 }
 
