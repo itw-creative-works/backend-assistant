@@ -63,6 +63,17 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.request.language = this.getHeaderLanguage(this.ref.req.headers);
   this.request.platform = this.getHeaderPlatform(this.ref.req.headers);
 
+  /* 
+    MORE HEADERS TO GET
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Platform-Version
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Model
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Mobile
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Full-Version-List
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Full-Version  
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Arch
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA
+  */
+
   this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
   this.request.path = (this.ref.req.path || '');
   this.request.user = this.resolveAccount({authenticated: false});
