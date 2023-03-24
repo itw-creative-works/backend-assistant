@@ -10,8 +10,10 @@ function BackendAssistant() {
 }
 
 function tryParse(input) {
-  JSON5 = JSON5 || require('json5');
   var ret;
+
+  JSON5 = JSON5 || require('json5');
+
   try {
     ret = JSON5.parse(input);
   } catch (e) {
@@ -134,14 +136,17 @@ BackendAssistant.prototype.getEnvironment = function () {
 
 BackendAssistant.prototype.logProd = function () {
   const self = this;
+
   self._log.apply(this, args);
 };
 
 BackendAssistant.prototype.log = function () {
   const self = this;
+
   let args = Array.prototype.slice.call(arguments);
   let last = args[args.length - 1];
   let override = (typeof last === 'object' && last.environment === 'production');
+
   if (self.meta.environment === 'development' || override) {
     if (override) {
       args.pop();
@@ -152,6 +157,7 @@ BackendAssistant.prototype.log = function () {
 
 BackendAssistant.prototype.error = function () {
   const self = this;
+  
   let args = Array.prototype.slice.call(arguments);
   args.unshift('error');
   self.log.apply(self, args);
@@ -183,11 +189,13 @@ BackendAssistant.prototype._log = function() {
 
 BackendAssistant.prototype.errorManager = function(e, options) {
   const self = this;
+
   options = options || {};
   options.log = typeof options.log === 'undefined' ? true : options.log;
   options.sentry = typeof options.sentry === 'undefined' ? true : options.sentry;
   options.send = typeof options.send === 'undefined' ? true : options.send;
   options.code = typeof options.code === 'undefined' ? 500 : options.code;
+
   const newError = e instanceof Error ? e : new Error(e);
 
   // Attach properties
@@ -220,14 +228,17 @@ BackendAssistant.prototype.errorManager = function(e, options) {
 
 BackendAssistant.prototype.authenticate = async function (options) {
   const self = this;
+
   let admin = self.ref.admin;
   let functions = self.ref.functions;
   let req = self.ref.req;
   let res = self.ref.res;
   let data = self.request.data;
   let idToken;
+
   options = options || {};
   options.resolve = typeof options.resolve === 'undefined' ? true : options.resolve;
+
   const logOptions = {environment: options.log ? 'production' : 'development'}
 
   function _resolve(user) {
@@ -326,6 +337,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
 
 BackendAssistant.prototype.resolveAccount = function (user) {
   const ResolveAccount = new (require('resolve-account'))();
+
   return ResolveAccount.resolve(undefined, user)
 }
 
@@ -348,6 +360,7 @@ BackendAssistant.prototype.parseRepo = function (repo) {
 
 BackendAssistant.prototype.getHeaderIp = function (headers) {
   headers = headers || {};
+
   return (
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-connecting-ip']
@@ -367,6 +380,7 @@ BackendAssistant.prototype.getHeaderIp = function (headers) {
 
 BackendAssistant.prototype.getHeaderContinent = function (headers) {
   headers = headers || {};
+
   return (
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-ipcontinent']
@@ -381,6 +395,7 @@ BackendAssistant.prototype.getHeaderContinent = function (headers) {
 
 BackendAssistant.prototype.getHeaderCountry = function (headers) {
   headers = headers || {};
+
   return (
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-ipcountry']
@@ -401,6 +416,7 @@ BackendAssistant.prototype.getHeaderCountry = function (headers) {
 
 BackendAssistant.prototype.getHeaderCity = function (headers) {
   headers = headers || {};
+
   return (
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-ipcity']
@@ -414,6 +430,7 @@ BackendAssistant.prototype.getHeaderCity = function (headers) {
 
 BackendAssistant.prototype.getHeaderLatitude = function (headers) {
   headers = headers || {};
+
   return parseFloat((
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-iplatitude']
@@ -427,6 +444,7 @@ BackendAssistant.prototype.getHeaderLatitude = function (headers) {
 
 BackendAssistant.prototype.getHeaderLongitude = function (headers) {
   headers = headers || {};
+
   return parseFloat((
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-iplongitude']
@@ -441,6 +459,7 @@ BackendAssistant.prototype.getHeaderLongitude = function (headers) {
 
 BackendAssistant.prototype.getHeaderUserAgent = function (headers) {
   headers = headers || {};
+
   return (
     headers['user-agent']
     || ''
@@ -450,6 +469,7 @@ BackendAssistant.prototype.getHeaderUserAgent = function (headers) {
 
 BackendAssistant.prototype.getHeaderLanguage = function (headers) {
   headers = headers || {};
+
   return (
     headers['accept-language']
     || ''
@@ -459,6 +479,7 @@ BackendAssistant.prototype.getHeaderLanguage = function (headers) {
 
 BackendAssistant.prototype.getHeaderPlatform = function (headers) {
   headers = headers || {};
+
   return (
     headers['sec-ch-ua-platform']
     || ''
