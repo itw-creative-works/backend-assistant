@@ -159,7 +159,17 @@ BackendAssistant.prototype.error = function () {
   const self = this;
   
   let args = Array.prototype.slice.call(arguments);
+  
   args.unshift('error');
+  self.log.apply(self, args);
+};
+
+BackendAssistant.prototype.warn = function () {
+  const self = this;
+  
+  let args = Array.prototype.slice.call(arguments);
+
+  args.unshift('warn');
   self.log.apply(self, args);
 };
 
