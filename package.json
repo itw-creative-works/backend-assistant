@@ -27,7 +27,7 @@
     "fs-jetpack": "^4.3.1",
     "json5": "^2.2.3",
     "lodash": "^4.17.21",
-    "resolve-account": "^0.0.9",
+    "resolve-account": "^1.0.0",
     "uuid": "^8.3.2"
   }
 }
