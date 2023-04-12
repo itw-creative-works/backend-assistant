@@ -309,6 +309,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
     .catch(function(error) {
       console.error('Error getting documents: ', error);
     });
+
     return _resolve(self.request.user);
   } else {
     self.log('No Firebase ID token was able to be extracted.',
@@ -316,6 +317,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
       'Authorization: Bearer <Firebase ID Token>',
       'or by passing a "__session" cookie',
       'or by passing backendManagerKey or authenticationToken in the body or query', logOptions);
+      
     return _resolve(self.request.user);
   }
 
