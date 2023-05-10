@@ -23,6 +23,8 @@ function tryParse(input) {
 }
 
 BackendAssistant.prototype.init = function (ref, options) {
+  const self = this;
+
   options = options || {};
   options.accept = options.accept || 'json';
   options.showOptionsLog = typeof options.showOptionsLog !== 'undefined' ? options.showOptionsLog : false;
@@ -31,48 +33,48 @@ BackendAssistant.prototype.init = function (ref, options) {
 
   const now = new Date();
 
-  this.meta = {};
+  self.meta = {};
 
-  this.meta.startTime = {};
-  this.meta.startTime.timestamp = now.toISOString();
-  this.meta.startTime.timestampUNIX = Math.round((now.getTime()) / 1000);
+  self.meta.startTime = {};
+  self.meta.startTime.timestamp = now.toISOString();
+  self.meta.startTime.timestampUNIX = Math.round((now.getTime()) / 1000);
 
-  this.meta.name = options.functionName || process.env.FUNCTION_TARGET || 'unnamed';
-  this.meta.environment = options.environment || this.getEnvironment();
-  this.meta.type = options.functionType || process.env.FUNCTION_SIGNATURE_TYPE || 'unknown';
+  self.meta.name = options.functionName || process.env.FUNCTION_TARGET || 'unnamed';
+  self.meta.environment = options.environment || self.getEnvironment();
+  self.meta.type = options.functionType || process.env.FUNCTION_SIGNATURE_TYPE || 'unknown';
 
-  this.ref = {};
+  self.ref = {};
   ref = ref || {};
-  this.ref.res = ref.res || {};
-  this.ref.req = ref.req || {};
-  this.ref.admin = ref.admin || {};
-  this.ref.functions = ref.functions || {};
-  this.ref.Manager = ref.Manager || {};
+  self.ref.res = ref.res || {};
+  self.ref.req = ref.req || {};
+  self.ref.admin = ref.admin || {};
+  self.ref.functions = ref.functions || {};
+  self.ref.Manager = ref.Manager || {};
 
   // Set ID
   try {
-    this.id = Manager.Utilities().randomId();
+    self.id = self.ref.Manager.Utilities().randomId();
   } catch {
-    this.id = now.getTime();
+    self.id = now.getTime();
   }
 
   // Set stuff about request
-  this.request = {};
-  this.request.referrer = (this.ref.req.headers || {}).referrer || (this.ref.req.headers || {}).referer || '';
-  this.request.method = (this.ref.req.method || undefined);
+  self.request = {};
+  self.request.referrer = (self.ref.req.headers || {}).referrer || (self.ref.req.headers || {}).referer || '';
+  self.request.method = (self.ref.req.method || undefined);
 
   // Get geo-location data
-  this.request.ip = this.getHeaderIp(this.ref.req.headers);
-  this.request.continent = this.getHeaderContinent(this.ref.req.headers);
-  this.request.country = this.getHeaderCountry(this.ref.req.headers);
-  this.request.city = this.getHeaderCity(this.ref.req.headers);
-  this.request.latitude = this.getHeaderLatitude(this.ref.req.headers);
-  this.request.longitude = this.getHeaderLongitude(this.ref.req.headers);
+  self.request.ip = self.getHeaderIp(self.ref.req.headers);
+  self.request.continent = self.getHeaderContinent(self.ref.req.headers);
+  self.request.country = self.getHeaderCountry(self.ref.req.headers);
+  self.request.city = self.getHeaderCity(self.ref.req.headers);
+  self.request.latitude = self.getHeaderLatitude(self.ref.req.headers);
+  self.request.longitude = self.getHeaderLongitude(self.ref.req.headers);
 
   // Get User Agent data
-  this.request.userAgent = this.getHeaderUserAgent(this.ref.req.headers);
-  this.request.language = this.getHeaderLanguage(this.ref.req.headers);
-  this.request.platform = this.getHeaderPlatform(this.ref.req.headers);
+  self.request.userAgent = self.getHeaderUserAgent(self.ref.req.headers);
+  self.request.language = self.getHeaderLanguage(self.ref.req.headers);
+  self.request.platform = self.getHeaderPlatform(self.ref.req.headers);
 
   /* 
     MORE HEADERS TO GET
@@ -85,45 +87,45 @@ BackendAssistant.prototype.init = function (ref, options) {
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA
   */
 
-  this.request.type = (this.ref.req.xhr || _.get(this.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(this.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
-  this.request.path = (this.ref.req.path || '');
-  this.request.user = this.resolveAccount({authenticated: false});
+  self.request.type = (self.ref.req.xhr || _.get(self.ref.req, 'headers.accept', '').indexOf('json') > -1) || (_.get(self.ref.req, 'headers.content-type', '').indexOf('json') > -1) ? 'ajax' : 'form';
+  self.request.path = (self.ref.req.path || '');
+  self.request.user = self.resolveAccount({authenticated: false});
   if (options.accept === 'json') {
-    this.request.body = tryParse(this.ref.req.body || '{}');
-    this.request.query = tryParse(this.ref.req.query || '{}');
+    self.request.body = tryParse(self.ref.req.body || '{}');
+    self.request.query = tryParse(self.ref.req.query || '{}');
   }
 
-  this.request.headers = (this.ref.req.headers || {});
-  this.request.data = Object.assign(
+  self.request.headers = (self.ref.req.headers || {});
+  self.request.data = Object.assign(
     {},
-    _.cloneDeep(this.request.body || {}),
-    _.cloneDeep(this.request.query || {})
+    _.cloneDeep(self.request.body || {}),
+    _.cloneDeep(self.request.query || {})
   );
-  this.request.multipartData = {
+  self.request.multipartData = {
     fields: {},
     files: {},
   };
 
   // Constants
-  this.constant = {};
-  this.constant.pastTime = {};
-  this.constant.pastTime.timestamp = '1999-01-01T00:00:00Z';
-  this.constant.pastTime.timestampUNIX = 915148800;
+  self.constant = {};
+  self.constant.pastTime = {};
+  self.constant.pastTime.timestamp = '1999-01-01T00:00:00Z';
+  self.constant.pastTime.timestampUNIX = 915148800;
 
   if (
-    (this.meta.environment === 'development')
-    && ((this.request.method !== 'OPTIONS') || (this.request.method === 'OPTIONS' && options.showOptionsLog))
-    && (this.request.method !== 'undefined')
-    // && (this.request.method !== 'undefined' && typeof this.request.method !== 'undefined')
+    (self.meta.environment === 'development')
+    && ((self.request.method !== 'OPTIONS') || (self.request.method === 'OPTIONS' && options.showOptionsLog))
+    && (self.request.method !== 'undefined')
+    // && (self.request.method !== 'undefined' && typeof self.request.method !== 'undefined')
   ) {
     console.log(options.optionsLogString);
   }
 
-  this.tmpdir = path.resolve(os.tmpdir(), options.fileSavePath, uuid.v4());
+  self.tmpdir = path.resolve(os.tmpdir(), options.fileSavePath, uuid.v4());
 
-  this.initialized = true;
+  self.initialized = true;
 
-  return this;
+  return self;
 };
 
 BackendAssistant.prototype.getEnvironment = function () {
@@ -146,7 +148,7 @@ BackendAssistant.prototype.getEnvironment = function () {
 BackendAssistant.prototype.logProd = function () {
   const self = this;
 
-  self._log.apply(this, args);
+  self._log.apply(self, args);
 };
 
 BackendAssistant.prototype.log = function () {
@@ -160,7 +162,7 @@ BackendAssistant.prototype.log = function () {
     if (override) {
       args.pop();
     }
-    self._log.apply(this, args);
+    self._log.apply(self, args);
   }
 };
 
@@ -189,7 +191,7 @@ BackendAssistant.prototype._log = function() {
   let logs = [...Array.prototype.slice.call(arguments)];
 
   // 2. Prepend log prefix log string
-  logs.unshift(`[${self.meta.name}/${self.id} ${self.meta.startTime.timestamp}]:`);
+  logs.unshift(`[${self.meta.name}/${self.id} @ ${self.meta.startTime.timestamp}]:`);
 
   // 3. Pass along arguments to console.log
   if (logs[1] === 'error') {
@@ -644,8 +646,8 @@ function serializer(replacer, cycleReplacer) {
   var stack = [], keys = []
 
   if (cycleReplacer == null) cycleReplacer = function(key, value) {
-    if (stack[0] === value) return "[Circular ~]"
-    return "[Circular ~." + keys.slice(0, stack.indexOf(value)).join(".") + "]"
+    if (stack[0] === value) return '[Circular ~]'
+    return `[Circular ~.${keys.slice(0, stack.indexOf(value)).join('.')}]`;
   }
 
   return function(key, value) {
