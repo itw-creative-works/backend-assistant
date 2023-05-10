@@ -189,7 +189,7 @@ BackendAssistant.prototype._log = function() {
   let logs = [...Array.prototype.slice.call(arguments)];
 
   // 2. Prepend log prefix log string
-  logs.unshift(`[${self.meta.name}/${self.id} ${self.meta.startTime.timestamp}]`);
+  logs.unshift(`[${self.meta.name}/${self.id} ${self.meta.startTime.timestamp}]:`);
 
   // 3. Pass along arguments to console.log
   if (logs[1] === 'error') {
