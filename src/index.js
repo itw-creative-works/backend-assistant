@@ -29,11 +29,13 @@ BackendAssistant.prototype.init = function (ref, options) {
   options.optionsLogString = typeof options.optionsLogString !== 'undefined' ? options.optionsLogString : '\n\n\n\n\n';
   options.fileSavePath = options.fileSavePath || process.env.npm_package_name || '';
 
+  const now = new Date();
+
   this.meta = {};
 
   this.meta.startTime = {};
-  this.meta.startTime.timestamp = new Date().toISOString();
-  this.meta.startTime.timestampUNIX = Math.floor((+new Date(this.meta.startTime.timestamp)) / 1000);
+  this.meta.startTime.timestamp = now.toISOString();
+  this.meta.startTime.timestampUNIX = Math.round((now.getTime()) / 1000);
 
   this.meta.name = options.functionName || process.env.FUNCTION_TARGET || 'unnamed';
   this.meta.environment = options.environment || this.getEnvironment();
@@ -46,6 +48,13 @@ BackendAssistant.prototype.init = function (ref, options) {
   this.ref.admin = ref.admin || {};
   this.ref.functions = ref.functions || {};
   this.ref.Manager = ref.Manager || {};
+
+  // Set ID
+  try {
+    this.id = Manager.Utilities().randomId();
+  } catch {
+    this.id = now.getTime();
+  }
 
   // Set stuff about request
   this.request = {};
@@ -180,7 +189,7 @@ BackendAssistant.prototype._log = function() {
   let logs = [...Array.prototype.slice.call(arguments)];
 
   // 2. Prepend log prefix log string
-  logs.unshift(`[${self.meta.name} ${self.meta.startTime.timestamp}] >`);
+  logs.unshift(`[${self.meta.name}/${self.id} ${self.meta.startTime.timestamp}]`);
 
   // 3. Pass along arguments to console.log
   if (logs[1] === 'error') {
