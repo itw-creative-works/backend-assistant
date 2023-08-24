@@ -76,13 +76,13 @@ BackendAssistant.prototype.init = function (ref, options) {
   self.request.language = self.getHeaderLanguage(self.ref.req.headers);
   self.request.platform = self.getHeaderPlatform(self.ref.req.headers);
 
-  /* 
+  /*
     MORE HEADERS TO GET
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Platform-Version
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Model
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Mobile
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Full-Version-List
-    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Full-Version  
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Full-Version
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA-Arch
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA
   */
@@ -133,9 +133,9 @@ BackendAssistant.prototype.getEnvironment = function () {
   if (process.env.ENVIRONMENT === 'production') {
     return 'production';
   } else if (
-    process.env.ENVIRONMENT === 'development' 
-    || process.env.FUNCTIONS_EMULATOR === true 
-    || process.env.FUNCTIONS_EMULATOR === 'true' 
+    process.env.ENVIRONMENT === 'development'
+    || process.env.FUNCTIONS_EMULATOR === true
+    || process.env.FUNCTIONS_EMULATOR === 'true'
     || process.env.TERM_PROGRAM === 'Apple_Terminal'
     || process.env.TERM_PROGRAM === 'vscode'
   ) {
@@ -168,16 +168,16 @@ BackendAssistant.prototype.log = function () {
 
 BackendAssistant.prototype.error = function () {
   const self = this;
-  
+
   let args = Array.prototype.slice.call(arguments);
-  
+
   args.unshift('error');
   self.log.apply(self, args);
 };
 
 BackendAssistant.prototype.warn = function () {
   const self = this;
-  
+
   let args = Array.prototype.slice.call(arguments);
 
   args.unshift('warn');
@@ -328,7 +328,7 @@ BackendAssistant.prototype.authenticate = async function (options) {
       'Authorization: Bearer <Firebase ID Token>',
       'or by passing a "__session" cookie',
       'or by passing backendManagerKey or authenticationToken in the body or query', logOptions);
-      
+
     return _resolve(self.request.user);
   }
 
@@ -423,7 +423,7 @@ BackendAssistant.prototype.getHeaderCountry = function (headers) {
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-ipcountry']
 
-    // 
+    //
     || headers['x-country-code']
 
     // these are present for non-cloudflare requests (11/21/2020)
