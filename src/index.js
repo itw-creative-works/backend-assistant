@@ -67,6 +67,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   self.request.ip = self.getHeaderIp(self.ref.req.headers);
   self.request.continent = self.getHeaderContinent(self.ref.req.headers);
   self.request.country = self.getHeaderCountry(self.ref.req.headers);
+  self.request.region = self.getHeaderRegion(self.ref.req.headers);
   self.request.city = self.getHeaderCity(self.ref.req.headers);
   self.request.latitude = self.getHeaderLatitude(self.ref.req.headers);
   self.request.longitude = self.getHeaderLongitude(self.ref.req.headers);
@@ -75,6 +76,7 @@ BackendAssistant.prototype.init = function (ref, options) {
   self.request.userAgent = self.getHeaderUserAgent(self.ref.req.headers);
   self.request.language = self.getHeaderLanguage(self.ref.req.headers);
   self.request.platform = self.getHeaderPlatform(self.ref.req.headers);
+  self.request.mobile = self.getHeaderMobile(self.ref.req.headers);
 
   /*
     MORE HEADERS TO GET
@@ -395,6 +397,8 @@ BackendAssistant.prototype.getHeaderIp = function (headers) {
 
     // Not sure about these
     // || headers['fastly-client-ip']
+
+    // If unsure, return local IP
     || '127.0.0.1'
   )
   .split(',')[0]
@@ -408,8 +412,7 @@ BackendAssistant.prototype.getHeaderContinent = function (headers) {
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-ipcontinent']
 
-    // Not sure about these
-    // || headers['x-country-code']
+    // If unsure, return ZZ
     || 'ZZ'
   )
   .split(',')[0]
@@ -429,9 +432,25 @@ BackendAssistant.prototype.getHeaderCountry = function (headers) {
     // these are present for non-cloudflare requests (11/21/2020)
     || headers['x-appengine-country']
 
-    // Not sure about these
-    // || headers['x-country-code']
+    // If unsure, return ZZ
     || 'ZZ'
+  )
+  .split(',')[0]
+  .trim();
+}
+
+BackendAssistant.prototype.getHeaderRegion = function (headers) {
+  headers = headers || {};
+
+  return (
+    // these are present for cloudflare requests (11/21/2020)
+    headers['cf-region']
+
+    // these are present for non-cloudflare requests (11/21/2020)
+    || headers['x-appengine-region']
+
+    // If unsure, return unknown
+    || 'Unknown'
   )
   .split(',')[0]
   .trim();
@@ -444,7 +463,9 @@ BackendAssistant.prototype.getHeaderCity = function (headers) {
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-ipcity']
 
-    // Not sure about these
+    || headers['x-appengine-city']
+
+    // If unsure, return unknown
     || 'Unknown'
   )
   .split(',')[0]
@@ -458,7 +479,9 @@ BackendAssistant.prototype.getHeaderLatitude = function (headers) {
     // these are present for cloudflare requests (11/21/2020)
     headers['cf-iplatitude']
 
-    // Not sure about these
+    || (headers['x-appengine-citylatlong'] || '').split(',')[0]
+
+    // If unsure, return unknown
     || '0'
   )
   .split(',')[0]
@@ -469,10 +492,12 @@ BackendAssistant.prototype.getHeaderLongitude = function (headers) {
   headers = headers || {};
 
   return parseFloat((
-    // these are present for cloudflare requests (11/21/2020)
+    // Cloudflare requests
     headers['cf-iplongitude']
 
-    // Not sure about these
+    || (headers['x-appengine-citylatlong'] || '').split(',')[1]
+
+    // If unsure, return unknown
     || '0'
   )
   .split(',')[0]
@@ -495,6 +520,7 @@ BackendAssistant.prototype.getHeaderLanguage = function (headers) {
 
   return (
     headers['accept-language']
+    || headers['x-orig-accept-language']
     || ''
   )
   .trim();
@@ -509,6 +535,15 @@ BackendAssistant.prototype.getHeaderPlatform = function (headers) {
   )
   .replace(/"/ig, '')
   .trim();
+}
+
+BackendAssistant.prototype.getHeaderMobile = function (headers) {
+  headers = headers || {};
+
+  // Will be ?0 if fale or ?1 if true
+  const mobile = (headers['sec-ch-ua-mobile'] || '').replace(/\?/ig, '');
+
+  return mobile === '1' || mobile === true || mobile === 'true';
 }
 
 /**
