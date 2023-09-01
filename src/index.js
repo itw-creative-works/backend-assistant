@@ -108,6 +108,14 @@ BackendAssistant.prototype.init = function (ref, options) {
     files: {},
   };
 
+  // Log the request
+  // if (Object.keys(self.request.data).length > 0) {
+  //   self.log('Request:', self.request.data, {
+  //     ip: self.request.ip,
+
+  //   }, {environment: 'production'});
+  // }
+
   // Constants
   self.constant = {};
   self.constant.pastTime = {};
@@ -158,7 +166,7 @@ BackendAssistant.prototype.log = function () {
 
   let args = Array.prototype.slice.call(arguments);
   let last = args[args.length - 1];
-  let override = (typeof last === 'object' && last.environment === 'production');
+  let override = last && typeof last === 'object' && last.environment === 'production';
 
   if (self.meta.environment === 'development' || override) {
     if (override) {
